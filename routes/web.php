@@ -147,7 +147,10 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
             Route::get('/', [HomeController::class, 'dashboard'])->name('dashboard');
 
             Route::get('/references/programs-medications', \App\Livewire\References\ProgramsMedications::class)
-                ->name('references.index');
+                ->name('references.programs-medications.index');
+
+            Route::get('/references/programs-services', \App\Livewire\References\ProgramsServices::class)
+                ->name('references.programs-services.index');
 
             Route::get('/edit', EditLegalEntity::class)
                 ->can('edit', 'legalEntity')

@@ -288,7 +288,7 @@
                     </li>
                 @endcan
 
-                    <li x-data="{ open: {{ request()->routeIs('references.index') ? 'true' : 'false' }} }"
+                    <li x-data="{ open: {{ (request()->routeIs('references.programs-medications.index') || request()->routeIs('references.programs-services.index')) ? 'true' : 'false' }} }"
                         class="space-y-2">
                         <button @click="open = !open"
                                 type="button"
@@ -322,11 +322,19 @@
                             x-transition:leave-end="transform opacity-0 scale-95"
                         >
                             <li>
-                                <a href="{{ route('references.index', [legalEntity()]) }}"
+                                <a href="{{ route('references.programs-medications.index', [legalEntity()]) }}"
                                    class="submenu-item"
                                 >
                                     @icon('boxicons_file')
                                     <span>{{ __('programs-medications.title') }}</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('references.programs-services.index', [legalEntity()]) }}"
+                                   class="submenu-item"
+                                >
+                                    @icon('boxicons_file')
+                                    <span>{{ __('programs-services.title') }}</span>
                                 </a>
                             </li>
                         </ul>
