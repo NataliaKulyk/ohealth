@@ -1,6 +1,6 @@
-{{-- Medications Drawer (single teleport root — Alpine moves only firstElementChild) --}}
+{{-- Medical Devices Drawer (single teleport root — Alpine moves only firstElementChild) --}}
 <template x-teleport="body">
-    <div x-show="showMedicationDrawer"
+    <div x-show="showMedicalDeviceDrawer"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
@@ -12,14 +12,14 @@
          style="z-index: 39;"
          role="dialog"
          aria-modal="true"
-         aria-labelledby="medications-drawer-label"
+         aria-labelledby="medical-devices-drawer-label"
     >
         <div class="absolute inset-0 bg-gray-900/50"
              aria-hidden="true"
-             @click="showMedicationDrawer = false"
+             @click="showMedicalDeviceDrawer = false"
         ></div>
 
-        <div id="medications-drawer-right"
+        <div id="medical-devices-drawer-right"
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="translate-x-full"
              x-transition:enter-end="translate-x-0"
@@ -29,8 +29,8 @@
              class="absolute top-0 right-0 z-10 h-screen pt-20 p-4 overflow-y-auto bg-white w-4/5 dark:bg-gray-800 shadow-2xl"
              tabindex="-1"
         >
-        <h3 class="modal-header" id="medications-drawer-label">
-            {{ __('treatment-plan.new_medication_prescription') }}
+        <h3 class="modal-header" id="medical-devices-drawer-label">
+            {{ __('care-plan.new_medical_device_prescription') }}
         </h3>
 
         {{-- Content --}}
@@ -38,19 +38,19 @@
             {{-- Program Selection Section --}}
             <fieldset class="fieldset">
                 <legend class="legend">
-                    {{ __('treatment-plan.program_selection') }}
+                    {{ __('care-plan.program_selection') }}
                 </legend>
 
                 <div class="form-row-3">
                     <div class="form-group group">
-                        <label for="medication_program" class="label">
-                            {{ __('treatment-plan.program') }}*
+                        <label for="medical_device_program" class="label">
+                            {{ __('care-plan.program') }}*
                         </label>
-                        <select id="medication_program"
-                                name="medication_program"
+                        <select id="medical_device_program"
+                                name="medical_device_program"
                                 class="input-select peer"
                         >
-                            <option selected value="">{{ __('treatment-plan.prescription_medication') }}</option>
+                            <option selected value="">{{ __('care-plan.medical_guarantees_program') }}</option>
                         </select>
                     </div>
                 </div>
@@ -59,16 +59,15 @@
             <div class="mt-6 flex justify-start gap-3">
                 <button type="button"
                         class="button-minor"
-                        aria-controls="medications-drawer-right"
-                        @click="showMedicationDrawer = false"
+                        aria-controls="medical-devices-drawer-right"
+                        @click="showMedicalDeviceDrawer = false"
                 >
                     {{ __('forms.cancel') }}
                 </button>
 
                 <button type="button"
                         class="button-primary"
-                        aria-controls="medication-search-drawer-right"
-                        @click="showMedicationSearchDrawer = true"
+                        @click="showMedicalDeviceSearchDrawer = true"
                 >
                     {{ __('forms.continue') }}
                 </button>
