@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\MedicalEvents\Sql;
 
+use App\Enums\Person\ClinicalImpressionStatus;
 use Carbon\CarbonImmutable;
 use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -17,10 +18,26 @@ class ClinicalImpression extends Model
 {
     use HasCamelCasing;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'uuid',
+        'person_id',
+        'encounter_internal_id',
+        'status',
+        'description',
+        'code_id',
+        'encounter_id',
+        'assessor_id',
+        'previous_id',
+        'summary',
+        'note',
+        'explanatory_letter',
+        'ehealth_inserted_at',
+        'ehealth_updated_at'
+    ];
 
     protected $hidden = [
         'id',
+        'person_id',
         'encounter_internal_id',
         'code_id',
         'encounter_id',
@@ -29,6 +46,8 @@ class ClinicalImpression extends Model
         'created_at',
         'updated_at'
     ];
+
+    protected $casts = ['status' => ClinicalImpressionStatus::class];
 
     protected $appends = [
         'effective_period_start_date',

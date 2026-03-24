@@ -26,9 +26,9 @@ class EncounterCreate extends EncounterComponent
 {
     use HandlesReasonReferences;
 
-    public function mount(LegalEntity $legalEntity, int $patientId): void
+    public function mount(LegalEntity $legalEntity, int $id): void
     {
-        $this->initializeComponent($patientId);
+        $this->initializeComponent($id);
 
         $this->form->encounter['performer']['identifier']['value'] = Auth::user()->uuid;
         $this->form->episode['careManager']['identifier']['value'] = Auth::user()->uuid;

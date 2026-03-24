@@ -410,5 +410,6 @@ return [
         'sync_auth_methods_and_try_again' => 'Будь ласка, синхронізуйте методи автентифікації та спробуйте знову.',
         'episodes_synced_successfully' => 'Епізоди успішно синхронізовані',
         'encounters_synced_successfully' => 'Взаємодії успішно синхронізовані',
+        'clinical_impressions_synced_successfully' => 'Клінічні взаємодії успішно синхронізовані',
     ]
 ];

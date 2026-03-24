@@ -8,7 +8,7 @@
         <x-slot name="navigation">
             <div class="sm:flex md:divide-x md:divide-gray-100 dark:divide-gray-700 mb-8 gap-2">
                 @can('create', Encounter::class)
-                    <a href="{{ route('encounter.create', [legalEntity(), 'patientId' => $id]) }}"
+                    <a href="{{ route('encounter.create', [legalEntity(), 'id' => $id]) }}"
                        class="flex items-center gap-2 button-sync"
                     >
                         @icon('plus', 'w-4 h-4')

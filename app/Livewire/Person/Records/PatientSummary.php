@@ -7,6 +7,7 @@ namespace App\Livewire\Person\Records;
 use App\Classes\eHealth\EHealth;
 use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
+use App\Models\MedicalEvents\Sql\ClinicalImpression;
 use App\Models\MedicalEvents\Sql\Encounter;
 use App\Models\MedicalEvents\Sql\Episode;
 use App\Repositories\MedicalEvents\Repository;
@@ -20,6 +21,8 @@ class PatientSummary extends BasePatientComponent
     public array $episodes;
 
     public array $encounters;
+
+    public array $clinicalImpressions;
 
     public array $diagnoses;
 
@@ -93,17 +96,37 @@ class PatientSummary extends BasePatientComponent
             ->toArray();
     }
 
-    public function getClinicalImpressions(): void
+    public function syncClinicalImpressions(): void
     {
         try {
-            $response = EHealth::patient()->getShortEpisodes($this->uuid);
+            $response = EHealth::patient()->getClinicalImpressions($this->uuid);
+            $validatedData = $response->validate();
 
-            $this->episodes = $response->getData();
+            try {
+                Repository::clinicalImpression()->sync($this->id, $validatedData);
+                Session::flash('success', __('patients.messages.clinical_impressions_synced_successfully'));
+            } catch (Throwable $exception) {
+                $this->logDatabaseErrors($exception, 'Error while synchronizing clinical impressions');
+                Session::flash('error', __('messages.database_error'));
+
+                return;
+            }
+
+            // Refresh encounters data for display
+            $this->clinicalImpressions = $validatedData;
         } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
-            $this->handleEHealthExceptions($exception, 'Error when getting short episodes');
+            $this->handleEHealthExceptions($exception, 'Error when getting clinical impressions');
 
             return;
         }
+    }
+
+    public function getClinicalImpressions(): void
+    {
+        $this->clinicalImpressions = ClinicalImpression::wherePersonId($this->id)
+            ->with(['assessor.type.coding', 'code.coding', 'encounter.type.coding', 'previous.type.coding'])
+            ->get()
+            ->toArray();
     }
 
     /**

@@ -8,7 +8,7 @@
 
         <div id="accordion-open" data-accordion="open">
             <h2 id="accordion-open-heading-1">
-                <button wire:click.once="getEpisodes"
+                <button wire:click="syncClinicalImpressions"
                         type="button"
                         class="accordion-button rounded-t-xl border-b-0 group"
                         data-accordion-target="#accordion-open-body-1"

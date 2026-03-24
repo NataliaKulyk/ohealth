@@ -79,6 +79,26 @@ class Patient extends Request
     }
 
     /**
+     * Get a list of summary info about clinical impressions.
+     *
+     * @param  string  $id
+     * @param  array{encounter_id?: string, episode_id?: string, code?: string, status?: string, page?: int, page_size?: int}  $query
+     * @return PromiseInterface|EHealthResponse
+     * @throws ConnectionException|EHealthValidationException|EHealthResponseException
+     *
+     * @see https://medicaleventsmisapi.docs.apiary.io/#reference/medical-events/patient-summary/get-clinical-impressions
+     */
+    public function getClinicalImpressions(string $id, array $query = []): PromiseInterface|EHealthResponse
+    {
+        $this->setValidator($this->validateClinicalImpressions(...));
+        $this->setDefaultPageSize();
+
+        $mergedQuery = array_merge($this->options['query'], $query ?? []);
+
+        return $this->get(self::URL . "/$id/summary/clinical_impressions", $mergedQuery);
+    }
+
+    /**
      * Get the current diagnoses related only to active episodes.
      *
      * @param  string  $id
@@ -165,6 +185,32 @@ class Patient extends Request
     }
 
     /**
+     * Validate clinical impressions data from eHealth API.
+     *
+     * @param  EHealthResponse  $response
+     * @return array
+     */
+    protected function validateClinicalImpressions(EHealthResponse $response): array
+    {
+        $replaced = [];
+        foreach ($response->getData() as $data) {
+            $replaced[] = self::replaceEHealthPropNames($data);
+        }
+
+        $rules = collect($this->clinicalImpressionValidationRules())
+            ->mapWithKeys(static fn ($rule, $key) => ["*.$key" => $rule])
+            ->toArray();
+
+        $validator = Validator::make($replaced, $rules);
+
+        if ($validator->fails()) {
+            Log::channel('e_health_errors')->error('Clinical impression validation failed: ' . implode(', ', $validator->errors()->all()));
+        }
+
+        return $validator->validate();
+    }
+
+    /**
      * List of validation rules for episodes from eHealth.
      *
      * @return array
@@ -217,6 +263,100 @@ class Patient extends Request
             'period' => ['required', 'array'],
             'period.start' => ['required', 'date'],
             'period.end' => ['required', 'date']
+        ];
+    }
+
+    /**
+     * List of validation rules for clinical impressions from eHealth.
+     *
+     * @return array
+     */
+    protected function clinicalImpressionValidationRules(): array
+    {
+        return [
+            'uuid' => ['required', 'uuid'],
+            'status' => ['required', 'string'],
+            'description' => ['nullable', 'string'],
+            'note' => ['nullable', 'string'],
+            'summary' => ['nullable', 'string'],
+            'explanatory_letter' => ['nullable', 'string'],
+            'ehealth_inserted_at' => ['required', 'date'],
+            'ehealth_updated_at' => ['required', 'date'],
+
+            // assessor
+            'assessor' => ['required', 'array'],
+            'assessor.identifier' => ['required', 'array'],
+            'assessor.identifier.type' => ['required', 'array'],
+            'assessor.identifier.type.coding' => ['required', 'array'],
+            'assessor.identifier.type.coding.*.code' => ['required', 'string'],
+            'assessor.identifier.type.coding.*.system' => ['required', 'string'],
+            'assessor.identifier.type.text' => ['nullable', 'string'],
+            'assessor.identifier.value' => ['required', 'uuid'],
+
+            // code
+            'code' => ['required', 'array'],
+            'code.coding' => ['required', 'array'],
+            'code.coding.*.code' => ['required', 'string'],
+            'code.coding.*.system' => ['required', 'string'],
+            'code.text' => ['nullable', 'string'],
+
+            // effective_period
+            'effective_period' => ['nullable', 'array'],
+            'effective_period.start' => ['nullable', 'date'],
+            'effective_period.end' => ['nullable', 'date'],
+            'effective_date_time' => ['nullable', 'date'],
+
+            // encounter
+            'encounter' => ['required', 'array'],
+            'encounter.identifier' => ['required', 'array'],
+            'encounter.identifier.type' => ['required', 'array'],
+            'encounter.identifier.type.coding' => ['required', 'array'],
+            'encounter.identifier.type.coding.*.code' => ['required', 'string'],
+            'encounter.identifier.type.coding.*.system' => ['required', 'string'],
+            'encounter.identifier.type.text' => ['nullable', 'string'],
+            'encounter.identifier.value' => ['required', 'uuid'],
+
+            // findings
+            'findings' => ['nullable', 'array'],
+            'findings.*.basis' => ['nullable', 'string'],
+            'findings.*.item_reference' => ['required', 'array'],
+            'findings.*.item_reference.identifier' => ['required', 'array'],
+            'findings.*.item_reference.identifier.type' => ['required', 'array'],
+            'findings.*.item_reference.identifier.type.coding' => ['required', 'array'],
+            'findings.*.item_reference.identifier.type.coding.*.code' => ['required', 'string'],
+            'findings.*.item_reference.identifier.type.coding.*.system' => ['required', 'string'],
+            'findings.*.item_reference.identifier.type.text' => ['nullable', 'string'],
+            'findings.*.item_reference.identifier.value' => ['required', 'uuid'],
+
+            // previous
+            'previous' => ['nullable', 'array'],
+            'previous.identifier' => ['nullable', 'array'],
+            'previous.identifier.type' => ['nullable', 'array'],
+            'previous.identifier.type.coding' => ['nullable', 'array'],
+            'previous.identifier.type.coding.*.code' => ['nullable', 'string'],
+            'previous.identifier.type.coding.*.system' => ['nullable', 'string'],
+            'previous.identifier.type.text' => ['nullable', 'string'],
+            'previous.identifier.value' => ['nullable', 'uuid'],
+
+            // problems
+            'problems' => ['nullable', 'array'],
+            'problems.*.identifier' => ['required', 'array'],
+            'problems.*.identifier.type' => ['required', 'array'],
+            'problems.*.identifier.type.coding' => ['required', 'array'],
+            'problems.*.identifier.type.coding.*.code' => ['required', 'string'],
+            'problems.*.identifier.type.coding.*.system' => ['required', 'string'],
+            'problems.*.identifier.type.text' => ['nullable', 'string'],
+            'problems.*.identifier.value' => ['required', 'uuid'],
+
+            // supporting_info
+            'supporting_info' => ['nullable', 'array'],
+            'supporting_info.*.identifier' => ['required', 'array'],
+            'supporting_info.*.identifier.type' => ['required', 'array'],
+            'supporting_info.*.identifier.type.coding' => ['required', 'array'],
+            'supporting_info.*.identifier.type.coding.*.code' => ['required', 'string'],
+            'supporting_info.*.identifier.type.coding.*.system' => ['required', 'string'],
+            'supporting_info.*.identifier.type.text' => ['nullable', 'string'],
+            'supporting_info.*.identifier.value' => ['required', 'uuid'],
         ];
     }
 
