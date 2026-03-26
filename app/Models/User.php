@@ -6,7 +6,6 @@ namespace App\Models;
 
 use BackedEnum;
 use Exception;
-use Carbon\Carbon;
 use App\Enums\Status;
 use App\Enums\User\Role;
 use InvalidArgumentException;
@@ -25,9 +24,9 @@ use Spatie\Permission\PermissionRegistrar;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Spatie\Permission\Models\Role as SpatieRole;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -167,16 +166,21 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if user has access to the Legal Entity with specified UUID.
+     * Find a user by their eHealth UUID who has at least one employee in the given Legal Entity.
      *
-     * @param  string  $legalEntityUuid
-     * @return bool
+     * @param  string  $userUuid        The user's eHealth UUID (from access token)
+     * @param  string  $legalEntityUuid The Legal Entity UUID to check access against
      */
-    public function hasAccessToLegalEntityByUuid(string $legalEntityUuid): bool
+    public function scopeWithLegalEntityAccess(Builder $query, string $userUuid, string $legalEntityUuid): Builder
     {
-        return $this->party?->employees()
-            ->whereHas('legalEntity', fn (Builder $query) => $query->where('uuid', $legalEntityUuid))
-            ->exists();
+        return $query
+            ->where('uuid', $userUuid)
+            ->whereExists(fn (QueryBuilder $q) => $q
+                ->from('employee_users')
+                ->join('employees', 'employees.id', '=', 'employee_users.employee_id')
+                ->whereColumn('employee_users.user_id', 'users.id')
+                ->where('employees.legal_entity_uuid', $legalEntityUuid)
+            );
     }
 
     /**
@@ -191,6 +195,41 @@ class User extends Authenticatable implements MustVerifyEmail
             ->get()
             ->unique('legal_entity_id')
             ->pluck('legal_entity_id') ?? collect();
+    }
+
+    /**
+     * Scope a query to users related to a given party (direct or via employee_users pivot).
+     *
+     * @param Builder $query
+     * @param int $partyId
+     *
+     * @return Builder
+     */
+    public function scopeAllRelated(Builder $query, ?int $partyId = null, ?int $legalEntityId = null): Builder
+    {
+        $partyId ??= $this->partyId;
+        $legalEntityId ??= legalEntity()->id ?? $this->legalEntityId;
+
+        return $query
+            ->where('party_id', $partyId)
+            ->where(function (Builder $q) use ($partyId, $legalEntityId) {
+                $employeeBase = Employee::getEmployeesForParty(legalEntityId: $legalEntityId, partyId: $partyId);
+
+                // Users linked via direct employee.user_id column
+                $q->whereIn('id', $employeeBase->whereNotNull('user_id')->select('user_id'))
+                // Users linked via employee_users pivot
+                // NOTE: about reuse of $employeeBase. At the first glance it can be done with mergeConstraintsFrom(),
+                // but trying to reuse the base query directly with methods like mergeConstraintsFrom()
+                // won't work cleanly since that's not a standard Laravel approach.
+                // The simplest solution is to just duplicate the conditions in the orWhereHas callback
+                // rather than trying to extract them into a reusable query builder instance.
+                    ->orWhereHas('employees', fn (Builder $q1) => $q1
+                        ->where('party_id', $partyId)
+                        ->where('legal_entity_id', $legalEntityId)
+                        ->where('status', Status::APPROVED)
+                    );
+            })
+            ->distinct();
     }
 
     /**
