@@ -69,8 +69,6 @@ use App\Livewire\Person\PersonRequestEdit;
 use App\Livewire\Person\PersonIndex;
 use App\Livewire\Person\Records\PatientData;
 use App\Livewire\Person\Records\PatientEpisodes;
-use App\Livewire\Person\Records\PatientObservation;
-use App\Livewire\Person\Records\PatientCondition;
 use App\Livewire\Person\Records\PatientSummary;
 use App\Livewire\Person\Records\PatientVaccination;
 use App\Livewire\Person\Records\PatientDiagnoses;
@@ -294,6 +292,7 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                         Route::get('/{id}/patient-data', PatientData::class)->name('patient-data');
                         Route::get('/{id}/summary', PatientSummary::class)->name('summary');
                         Route::get('/{id}/episodes', PatientEpisodes::class)->name('episodes');
+                        Route::get('/{id}/care-plans', \App\Livewire\Person\Records\PersonCarePlans::class)->name('care-plans');
                         Route::get('/{id}/observations', PatientObservation::class)->name('observations');
                         Route::get('/{id}/vaccination', PatientVaccination::class)->name('vaccination');
                         Route::get('/{id}/condition', PatientCondition::class)->name('condition');
@@ -318,7 +317,7 @@ Route::middleware(['auth:web,ehealth', 'verified'])->group(function () {
                 });
 
                 Route::middleware('can:create,' . Encounter::class)->name('encounter.')->group(function () {
-                    Route::get('/{id}/encounter/create', EncounterCreate::class)->name('create');
+                    Route::get('/{patientId}/encounter/create', EncounterCreate::class)->name('create');
                     Route::get('/{patientId}/encounter/{encounterId}', EncounterEdit::class)->name('edit');
                 });
 
