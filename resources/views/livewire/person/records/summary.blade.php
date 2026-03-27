@@ -30,7 +30,7 @@
              class="w-full flex items-center justify-between overflow-x-auto bg-gray-100 dark:bg-gray-800/50 p-1 px-2 xl:p-1.5 xl:px-3 rounded-xl mb-10 text-[13px] xl:text-sm border border-transparent dark:border-gray-700/50"
         >
             <a href="{{ route('persons.patient-data', [legalEntity(), 'id' => $id]) }}"
-               :class="activeTab === 'patient-data' ? 'bg-blue-600 text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'"
+               :class="activeTab === 'patient-data' ? 'summary-tab-active' : 'summary-tab-inactive'"
                @click.prevent="activeTab = 'patient-data'; window.location.href = this.href"
                class="summary-tab"
             >
@@ -39,7 +39,7 @@
 
             <button type="button"
                     @click.prevent="activeTab = 'summary'"
-                    :class="activeTab === 'summary' ? 'bg-blue-600 text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'"
+                    :class="activeTab === 'summary' ? 'summary-tab-active' : 'summary-tab-inactive'"
                     class="summary-tab"
             >
                 {{ __('patients.summary') }}
@@ -48,7 +48,7 @@
             <button type="button"
                     wire:click.once="getDiagnoses"
                     @click.prevent="activeTab = 'diagnoses'"
-                    :class="activeTab === 'diagnoses' ? 'bg-blue-600 text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'"
+                    :class="activeTab === 'diagnoses' ? 'summary-tab-active' : 'summary-tab-inactive'"
                     class="summary-tab"
             >
                 {{ __('patients.diagnoses') }}
@@ -57,7 +57,7 @@
             <button type="button"
                     wire:click.once="getObservations"
                     @click.prevent="activeTab = 'observations'"
-                    :class="activeTab === 'observations' ? 'bg-blue-600 text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'"
+                    :class="activeTab === 'observations' ? 'summary-tab-active' : 'summary-tab-inactive'"
                     class="summary-tab"
             >
                 {{ __('patients.observation') }}
@@ -65,7 +65,7 @@
 
             <button type="button"
                     @click.prevent="activeTab = 'vaccinations'"
-                    :class="activeTab === 'vaccinations' ? 'bg-blue-600 text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'"
+                    :class="activeTab === 'vaccinations' ? 'summary-tab-active' : 'summary-tab-inactive'"
                     class="summary-tab"
             >
                 {{ __('patients.vaccinations') }}
@@ -73,7 +73,7 @@
 
             <button type="button"
                     @click.prevent="activeTab = 'procedures'"
-                    :class="activeTab === 'procedures' ? 'bg-blue-600 text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'"
+                    :class="activeTab === 'procedures' ? 'summary-tab-active' : 'summary-tab-inactive'"
                     class="summary-tab"
             >
                 {{ __('patients.procedures') }}
@@ -81,7 +81,7 @@
 
             <button type="button"
                     @click.prevent="activeTab = 'prescriptions'"
-                    :class="activeTab === 'prescriptions' ? 'bg-blue-600 text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'"
+                    :class="activeTab === 'prescriptions' ? 'summary-tab-active' : 'summary-tab-inactive'"
                     class="summary-tab"
             >
                 {{ __('patients.prescriptions') }}
@@ -89,21 +89,22 @@
 
             <button type="button"
                     @click.prevent="activeTab = 'treatment_plans'"
-                    :class="activeTab === 'treatment_plans' ? 'bg-blue-600 text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'"
-                    class="inline-flex items-center px-2.5 xl:px-3 py-1.5 font-medium rounded-lg whitespace-nowrap transition-colors"
+                    :class="activeTab === 'treatment_plans' ? 'summary-tab-active' : 'summary-tab-inactive'"
+                    class="summary-tab"
             >
                 {{ __('patients.treatment_plans') }}
             </button>
 
             <button type="button"
                     @click.prevent="activeTab = 'diagnostic_reports'"
-                    :class="activeTab === 'diagnostic_reports' ? 'bg-blue-600 text-white shadow' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'"
-                    class="inline-flex items-center px-2.5 xl:px-3 py-1.5 font-medium rounded-lg whitespace-nowrap transition-colors"
+                    :class="activeTab === 'diagnostic_reports' ? 'summary-tab-active' : 'summary-tab-inactive'"
+                    class="summary-tab"
             >
                 {{ __('patients.diagnostic_reports') }}
             </button>
 
-            <button type="button" class="inline-flex items-center px-2 py-1.5 text-gray-900 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors ml-1">
+            <button type="button"
+                    class="inline-flex items-center px-2 py-1.5 text-gray-900 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors ml-1">
                 <span class="block px-2 flex items-center justify-center space-x-1">
                     <span class="w-1.5 h-1.5 bg-gray-700 dark:bg-gray-400 rounded-full"></span>
                     <span class="w-1.5 h-1.5 bg-gray-700 dark:bg-gray-400 rounded-full"></span>
@@ -136,15 +137,17 @@
                 @foreach($navItems as $item)
                     <div id="block-{{ $item['id'] }}"
                          class="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl transition-all scroll-mt-8"
-                         :class="activeSection === '{{ $item['id'] }}' ? 'border-gray-200 dark:border-gray-600 shadow-md' : 'border-gray-100 hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-700/80'"
+                         :class="activeSection === '{{ $item['id'] }}' ? 'summary-section-active' : 'summary-section-inactive'"
                     >
                         <button @if($item['action']) wire:click.once="{{ $item['action'] }}" @endif
                         @click="activeSection = activeSection === '{{ $item['id'] }}' ? '' : '{{ $item['id'] }}'"
                                 type="button"
                                 class="w-full flex items-center justify-between p-5 focus:outline-none"
                         >
-                            <div class="flex items-center gap-4 text-gray-900 dark:text-gray-100 font-medium text-[15px]">
-                                <span class="w-6 h-6 flex items-center justify-center shrink-0 text-gray-900 dark:text-gray-100">
+                            <div
+                                class="flex items-center gap-4 text-gray-900 dark:text-gray-100 font-medium text-[15px]">
+                                <span
+                                    class="w-6 h-6 flex items-center justify-center shrink-0 text-gray-900 dark:text-gray-100">
                                     @icon($item['icon'], 'w-6 h-6')
                                 </span>
                                 <span class="truncate">{{ $item['label'] }}</span>
@@ -173,7 +176,7 @@
                             @elseif($item['id'] === 'interaction')
                                 @include('livewire.person.records.parts.interaction')
                             @elseif($item['id'] === 'clinical_impressions')
-                                @include('livewire.person.records.parts.clinical_impressions')
+                                @include('livewire.person.records.parts.clinical-impressions')
                             @elseif($item['id'] === 'vaccinations')
                                 @include('livewire.person.records.parts.vaccinations')
                             @elseif($item['id'] === 'observation')
@@ -183,11 +186,11 @@
                             @elseif($item['id'] === 'condition')
                                 @include('livewire.person.records.parts.condition')
                             @elseif($item['id'] === 'diagnostic_reports')
-                                @include('livewire.person.records.parts.diagnostic_reports')
+                                @include('livewire.person.records.parts.diagnostic-reports')
                             @elseif($item['id'] === 'allergies')
                                 @include('livewire.person.records.parts.allergies')
                             @elseif($item['id'] === 'risk_assessments')
-                                @include('livewire.person.records.parts.risk_assessments')
+                                @include('livewire.person.records.parts.risk-assessments')
                             @elseif($item['id'] === 'devices')
                                 @include('livewire.person.records.parts.devices')
                             @elseif($item['id'] === 'medicines')
@@ -218,7 +221,7 @@
                                 setTimeout(() => { document.getElementById('block-{{ $item['id'] }}').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
                             "
                             type="button"
-                            :class="activeSection === '{{ $item['id'] }}' ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'text-gray-800 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-200'"
+                            :class="activeSection === '{{ $item['id'] }}' ? 'summary-sidebar-btn-active' : 'summary-sidebar-btn-inactive'"
                             class="summary-sidebar-btn"
                     >
                         <span class="w-5 h-5 flex items-center justify-center shrink-0">
