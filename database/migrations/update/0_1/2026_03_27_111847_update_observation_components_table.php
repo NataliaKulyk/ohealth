@@ -14,9 +14,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('observation_components', function (Blueprint $table) {
-            $table->foreignId('code_id')->after('observation_id')->constrained('codeable_concepts');
-            $table->foreignId('value_codeable_concept_id')->after('interpretation_id')->nullable()->constrained('codeable_concepts');
-            $table->foreignId('codeable_concept_id')->nullable()->change();
+            if (!Schema::hasColumn('observation_components', 'code_id')) {
+                $table->foreignId('code_id')->after('observation_id')->constrained('codeable_concepts');
+            }
+            if (!Schema::hasColumn('observation_components', 'value_codeable_concept_id')) {
+                $table->foreignId('value_codeable_concept_id')->after('interpretation_id')->nullable()->constrained('codeable_concepts');
+            }
+            if (Schema::hasColumn('observation_components', 'codeable_concept_id')) {
+                $table->foreignId('codeable_concept_id')->nullable()->change();
+            }
         });
     }
 
@@ -26,10 +32,17 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('observation_components', function (Blueprint $table) {
-            $table->dropForeign(['code_id']);
-            $table->dropForeign(['value_codeable_concept_id']);
-            $table->dropColumn(['code_id', 'value_codeable_concept_id']);
-            $table->foreignId('codeable_concept_id')->nullable(false)->change();
+            if (Schema::hasColumn('observation_components', 'code_id')) {
+                $table->dropForeign(['code_id']);
+                $table->dropColumn('code_id');
+            }
+            if (Schema::hasColumn('observation_components', 'value_codeable_concept_id')) {
+                $table->dropForeign(['value_codeable_concept_id']);
+                $table->dropColumn('value_codeable_concept_id');
+            }
+            if (Schema::hasColumn('observation_components', 'codeable_concept_id')) {
+                $table->foreignId('codeable_concept_id')->nullable(false)->change();
+            }
         });
     }
 };
