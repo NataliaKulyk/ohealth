@@ -26,56 +26,77 @@
         </x-slot>
 
         <x-slot name="navigation">
+            <div class="w-full flex items-center justify-between overflow-x-auto bg-gray-100 dark:bg-gray-800/50 p-1 px-2 xl:p-1.5 xl:px-3 rounded-xl text-[13px] xl:text-sm border border-transparent dark:border-gray-700/50">
+                <a href="{{ route('persons.patient-data', [legalEntity(), 'id' => $id]) }}"
+                   class="summary-tab {{ request()->routeIs('persons.patient-data') ? 'summary-tab-active' : 'summary-tab-inactive' }}"
+                >
+                    {{ __('patients.patient_data') }}
+                </a>
 
-            @if(!request()->routeIs('persons.summary'))
-                <nav x-data="{ currentPath: window.location.pathname }">
-                    @php
-                        $navItems = request()->routeIs('persons.summary')
-                            ? [
-                                'summary' => 'patients.summary',
-                            ]
-                            : [
-                                'patient-data' => 'patients.patient_data',
-                                'summary' => 'patients.summary',
-                                'episodes' => 'patients.episodes',
-                            ];
-                    @endphp
-                    {{-- Mobile version --}}
-                    <div class="sm:hidden">
-                        <label for="tabs" class="sr-only"></label>
-                        <select id="tabs"
-                                x-model="currentPath"
-                                @change="window.location.href = $event.target.value"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        >
-                            @foreach($navItems as $route => $translation)
-                                <option value="{{ route('persons.' . $route, [legalEntity(), 'id' => $id]) }}"
-                                        :selected="currentPath.includes('{{ $route }}')"
-                                >
-                                    {{ __($translation) }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                <a href="{{ route('persons.summary', [legalEntity(), 'id' => $id]) }}"
+                   class="summary-tab {{ request()->routeIs('persons.summary') ? 'summary-tab-active' : 'summary-tab-inactive' }}"
+                >
+                    {{ __('patients.summary') }}
+                </a>
 
-                    {{-- Desktop version --}}
-                    <ul class="hidden text-sm font-medium text-center text-gray-500 rounded-lg shadow-sm sm:flex dark:divide-gray-700 dark:text-gray-400">
-                        @foreach($navItems as $route => $translation)
-                            <li class="w-full focus-within:z-10">
-                                <a href="{{ route('persons.' . $route, [legalEntity(), 'id' => $id]) }}"
-                                   @click="currentPath = '{{ route('persons.' . $route, [legalEntity(), 'id' => $id]) }}'"
-                                   class="inline-block w-full p-4 border-gray-200 dark:border-gray-700 focus:ring-4 focus:ring-blue-300 focus:outline-none"
-                                   :class="currentPath.includes('{{ $route }}')
-                                   ? 'text-gray-900 bg-gray-100 dark:bg-gray-700 dark:text-white'
-                                   : 'bg-white hover:text-gray-700 hover:bg-gray-50 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700'"
-                                >
-                                    {{ __($translation) }}
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </nav>
-            @endif
+                <a href="{{ route('persons.episodes', [legalEntity(), 'id' => $id]) }}"
+                   class="summary-tab {{ request()->routeIs('persons.episodes') ? 'summary-tab-active' : 'summary-tab-inactive' }}"
+                >
+                    {{ __('patients.episodes') }}
+                </a>
+
+                <a href="javascript:void(0)"
+                   class="summary-tab summary-tab-inactive cursor-not-allowed opacity-60"
+                >
+                    {{ __('patients.diagnoses') }}
+                </a>
+
+                <a href="javascript:void(0)"
+                   class="summary-tab summary-tab-inactive cursor-not-allowed opacity-60"
+                >
+                    {{ __('patients.observation') }}
+                </a>
+
+                <a href="javascript:void(0)"
+                   class="summary-tab summary-tab-inactive cursor-not-allowed opacity-60"
+                >
+                    {{ __('patients.vaccinations') }}
+                </a>
+
+                <a href="javascript:void(0)"
+                   class="summary-tab summary-tab-inactive cursor-not-allowed opacity-60"
+                >
+                    {{ __('patients.procedures') }}
+                </a>
+
+                <a href="javascript:void(0)"
+                   class="summary-tab summary-tab-inactive cursor-not-allowed opacity-60"
+                >
+                    {{ __('patients.prescriptions') }}
+                </a>
+
+                <a href="javascript:void(0)"
+                   class="summary-tab summary-tab-inactive cursor-not-allowed opacity-60"
+                >
+                    {{ __('patients.treatment_plans') }}
+                </a>
+
+                <a href="javascript:void(0)"
+                   class="summary-tab summary-tab-inactive cursor-not-allowed opacity-60"
+                >
+                    {{ __('patients.diagnostic_reports') }}
+                </a>
+
+                <button type="button"
+                        class="inline-flex items-center px-2 py-1.5 text-gray-900 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors ml-1"
+                >
+                    <span class="block px-2 flex items-center justify-center space-x-1">
+                        <span class="w-1.5 h-1.5 bg-gray-700 dark:bg-gray-400 rounded-full"></span>
+                        <span class="w-1.5 h-1.5 bg-gray-700 dark:bg-gray-400 rounded-full"></span>
+                        <span class="w-1.5 h-1.5 bg-gray-700 dark:bg-gray-400 rounded-full"></span>
+                    </span>
+                </button>
+            </div>
         </x-slot>
     </x-header-navigation>
 
