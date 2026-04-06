@@ -93,6 +93,18 @@ class Employee extends BaseEmployee
             );
     }
 
+    /**
+     * Scope to find employees matching the given types, status, user, legal entity, and optionally a party.
+     *
+     * @param  Builder    $query
+     * @param  array      $employeeTypes
+     * @param  string     $status
+     * @param  int        $userId
+     * @param  int        $legalEntityId
+     * @param  int|null   $partyId
+     *
+     * @return void
+     */
     public function scopeIdentifyEmployee(Builder $query, array $employeeTypes, string $status, int $userId, int $legalEntityId, ?int $partyId): void
     {
         $query->whereIn('employee_type', $employeeTypes)
@@ -102,6 +114,14 @@ class Employee extends BaseEmployee
             ->forParty($partyId);
     }
 
+    /**
+     * Scope to filter employees by a list of UUIDs.
+     *
+     * @param  Builder $query
+     * @param  array   $uuids
+     *
+     * @return Builder
+     */
     public function scopeFilterByUuids(Builder $query, array $uuids): Builder
     {
         return $query->whereIn('uuid', $uuids);
@@ -158,6 +178,68 @@ class Employee extends BaseEmployee
             ->where('employee_type', Role::OWNER)
             ->where('status', Status::APPROVED)
             ->where('is_active', true);
+    }
+
+    /**
+     * Scope to get employees for a specific party within a legal entity.
+     *
+     * Falls back to the current legal entity and party if not provided.
+     *
+     * @param  Builder $query
+     * @param  int|null $legalEntityId
+     * @param  int|null $partyId
+     * @param  Status $status
+     *
+     * @return Builder
+     */
+    public function scopeGetEmployeesForParty(Builder $query, ?int $legalEntityId = null, ?int $partyId = null, Status $status = Status::APPROVED): Builder
+    {
+        $legalEntityId ??= legalEntity()->id ?? $this->legalEntityId;
+        $partyId ??= $this->partyId;
+
+        return $query->where('legal_entity_id', $legalEntityId)
+            ->where('party_id', $partyId)
+            ->where('status', $status);
+    }
+
+    /**
+     * Scope to get employees for a specific legal entity via pivot table.
+     *
+     * Falls back to the current legal entity if not provided.
+     *
+     * @param  Builder $query
+     * @param  int|null $legalEntityId
+     *
+     * @return Builder
+     */
+    public function scopeGetEmployeesViaPivot(Builder $query, ?int $legalEntityId = null): Builder
+    {
+        $legalEntityId ??= legalEntity()->id ?? $this->legalEntityId;
+
+        return $query
+            ->where('legal_entity_id', $legalEntityId)
+            ->whereHas('users');
+    }
+
+    /**
+     * Scope to find an employee matching the given legal entity, type, position, and party.
+     *
+     * Used to check whether a duplicate employee record already exists before creating a new one.
+     *
+     * @param  Builder $query
+     * @param  string  $legalEntityUuid
+     * @param  string  $employeeType
+     * @param  string  $position
+     * @param  int     $partyId
+     *
+     * @return Builder
+     */
+    public function scopeMatchingEmployee(Builder $query, string $legalEntityUuid, string $employeeType, string $position, int $partyId): Builder {
+        return $query
+            ->where('legal_entity_uuid', $legalEntityUuid)
+            ->where('employee_type', $employeeType)
+            ->where('position', $position)
+            ->where('party_id', $partyId);
     }
 
     /**

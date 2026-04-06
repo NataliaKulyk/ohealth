@@ -8,6 +8,7 @@ use Log;
 use Throwable;
 use App\Core\Arr;
 use Carbon\Carbon;
+use App\Enums\Status;
 use App\Enums\JobStatus;
 use App\Models\Relations\Party;
 use App\Classes\eHealth\EHealth;
@@ -48,6 +49,7 @@ class EmployeeCreate
                 // Sync for requests that weren't approved through our system, were imported from EHealth
                 ->orWhere(fn(EloquentBuilder $query) =>
                     $query->where('status', RequestStatus::APPROVED)
+                        ->whereNull('user_id')
                         ->whereNotNull(['start_date', 'employee_id'])
                         ->latest('applied_at')
                 )
@@ -80,7 +82,7 @@ class EmployeeCreate
             [
                 'legal_entity_id' => $event->legalEntity->uuid,
                 'tax_id' => $taxId,
-                'status' => 'APPROVED',
+                'status' => Status::APPROVED->value,
                 'page_size' => config('ehealth.api.page_size_max') // Get maximum records at one time allowed by EHealth's API (if page_size in .env will set to smaller value, some of employee may be missed)
             ]
         )->validate();
@@ -91,8 +93,9 @@ class EmployeeCreate
 
         // This filters out only uuids associated with the current user
         $existingUuids = Employee::whereIn('uuid', array_column($employees, 'uuid'))
+            ->where('status', Status::APPROVED)
             ->where('legal_entity_id', $event->legalEntity->id)
-            ->whereNot('employee_type', 'OWNER') // We should not filter out OWNER type employees because they can be associated with the user later than other employee types due to their specific matching logic, so we can miss some employees if there is an OWNER type employee in the same legal entity, but we can not be sure that there is an OWNER type employee in the same legal entity,
+            ->whereNotIn('id', $employeeRequests->pluck('employee_id')->filter()->all())
             ->whereHas('users', fn(EloquentBuilder $query) => $query->where('id', $user->id))
             ->pluck('uuid')
             ->all();
@@ -103,7 +106,7 @@ class EmployeeCreate
             return;
         }
 
-        DB::transaction(function () use ($user, $employees, $employeeRequests, $event, &$newRoles) {
+        DB::transaction(function () use ($user, $employees, $employeeRequests, $event, &$isNewEmployeeWasCreated) {
             foreach ($employees as $eHealthEmployee) {
 
                 $employeeRequest = $this->findMatchingLocalRequest($employeeRequests, $eHealthEmployee);
@@ -182,7 +185,7 @@ class EmployeeCreate
         // All the going on below is need due to the fact that we need to assign roles based on employee types,
         // and employee types are assigned based on the employee records that are just created.
         if ($user?->party) {
-            Repository::party()->syncUserEmployeesAndRoles($user->party, $event->legalEntity->id);
+            Repository::party()->syncUserEmployeesAndRoles($user->party, $event->legalEntity);
         }
     }
 
@@ -207,28 +210,33 @@ class EmployeeCreate
                     return false;
                 }
 
-                // If start date is not provided in the request (mostly for OWNER), one cannot be sure that it's the same employee,
+                // If start date is not provided in the request or names do not match, one cannot be sure that it's the same employee,
                 // so we will try to find any employee with the same position and employee type and with the same party data,
                 // and if there is only one such employee, we will assume that it's the same employee and use its start date
                 // for comparison, otherwise we will return false because of ambiguity.
-                if (is_null($employeeRequest->startDate)) {
-                    switch ($employeeRequest->employeeType) {
-                    case 'OWNER':
-                        $partyUuid = $employee['party']['uuid'] ?? null;
-                        $party = Party::where('uuid', $partyUuid)->first();
+                if (is_null($employeeRequest->startDate) || !$namesMatch) {
+                    $partyUuid = $employee['party']['uuid'] ?? null;
+                    $party = Party::where('uuid', $partyUuid)->first();
 
-                        if (!$party) {
-                            return false;
-                        }
-
-                        $employeeRequest->startDate = Employee::where('legal_entity_uuid', $employeeRequest->legalEntityUuid)
-                            ->where('employee_type', $employeeRequest->employeeType)
-                            ->where('position', $employee['position'])
-                            ->where('party_id', $party->id)
-                            ->first()?->startDate;
-                        break;
-                    default:
+                    if (!$party) {
                         return false;
+                    }
+
+                    $employeeRequest->startDate = Employee::matchingEmployee(
+                            legalEntityUuid: $employeeRequest->legalEntityUuid,
+                            employeeType: $employeeRequest->employeeType,
+                            position: $employeeRequest->position,
+                            partyId: $party->id,
+                        )
+                        ->first()
+                            ? $employeeRequest->revision->data['employee_request_data']['start_date']
+                            : null;
+
+                    if (!$employeeRequest->startDate) {
+                        return false;
+                    } else {
+                        $namesMatch = true; // If we have found the employee by other parameters and got the start date,
+                                            // we can assume that names match because of the uniqueness of the employee record
                     }
                 }
 

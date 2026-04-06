@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Listeners;
 
-use App\Events\EhealthUserVerified;
+use App\Models\LegalEntity;
 use App\Repositories\Repository;
+use App\Events\EhealthUserVerified;
 
 class SyncUserRolesAfterVerification
 {
@@ -20,8 +21,9 @@ class SyncUserRolesAfterVerification
     public function handle(EhealthUserVerified $event): void
     {
         $user = $event->user;
-        $legalEntityId = $event->legalEntityId;
 
-        Repository::party()->syncUserEmployeesAndRoles($user->party, $legalEntityId);
+        $legalEntity = LegalEntity::find($event->legalEntityId);
+
+        Repository::party()->syncUserEmployeesAndRoles($user->party, $legalEntity);
     }
 }

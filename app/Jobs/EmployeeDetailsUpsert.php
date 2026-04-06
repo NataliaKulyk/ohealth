@@ -119,7 +119,7 @@ class EmployeeDetailsUpsert extends EHealthJob
             'user_id' => $employee->userId ?? $userID
         ]);
 
-        Repository::party()->syncUserEmployeesAndRoles($this->employee->party, $this->legalEntity->id);
+        Repository::party()->syncUserEmployeesAndRoles($this->employee->party, $this->legalEntity);
     }
 
     /**

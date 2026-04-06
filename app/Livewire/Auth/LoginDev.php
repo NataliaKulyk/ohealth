@@ -52,11 +52,10 @@ class LoginDev extends Login
 
             return back();
         }
-
         $accessToken = $accessToken->validate();
-        $user = User::where('uuid', $accessToken['user_id'])->first();
-        $accessToken = $accessToken['value'];
+        $user = User::withLegalEntityAccess($accessToken['user_id'], $this->legalEntityUUID)->first();
 
+        $accessToken = $accessToken['value'];
         $selectedLegalEntityId = LegalEntity::whereUuid($this->legalEntityUUID)->value('id');
         setPermissionsTeamId($selectedLegalEntityId);
 
