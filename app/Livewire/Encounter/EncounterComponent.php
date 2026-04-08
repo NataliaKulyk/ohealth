@@ -24,12 +24,12 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Locked;
-use App\Livewire\Person\Records\BasePatientComponent;
+use Livewire\Component;
 use App\Livewire\Encounter\Forms\EncounterForm as Form;
 use Livewire\WithFileUploads;
 use RuntimeException;
 
-class EncounterComponent extends BasePatientComponent
+class EncounterComponent extends Component
 {
     use FormTrait;
     use Cipher;
@@ -39,7 +39,20 @@ class EncounterComponent extends BasePatientComponent
 
     public bool $showSignatureModal = false;
 
+    /**
+     * ID of the patient for which create an encounter.
+     *
+     * @var int
+     */
+    #[Locked]
+    public int $patientId;
 
+    /**
+     * Patient full name.
+     *
+     * @var string
+     */
+    public string $patientFullName;
 
     /**
      * List of authorized user's divisions.
@@ -104,6 +117,12 @@ class EncounterComponent extends BasePatientComponent
      */
     public ?object $file = null;
 
+    /**
+     * Patient UUID for API requests.
+     *
+     * @var string
+     */
+    public string $patientUuid;
 
     /**
      * Legal entity type of auth user.
@@ -300,10 +319,14 @@ class EncounterComponent extends BasePatientComponent
             ->toArray();
     }
 
+    /**
+     * Initialize the component data based on the patient ID.
+     *
+     * @param  int  $patientId
+     * @return void
      */
-    protected function initializeComponent(): void
+    protected function initializeComponent(int $patientId): void
     {
-        $id = $this->id;
         $authUser = Auth::user();
 
         if (!$authUser) {
@@ -324,6 +347,7 @@ class EncounterComponent extends BasePatientComponent
             ];
         })->toArray();
 
+        $this->patientId = $patientId;
         $this->legalEntityType = legalEntity()->type->name;
         $this->role = $authUser->roles->first()->name;
         $this->divisions = legalEntity()->divisions->toArray();
@@ -334,7 +358,7 @@ class EncounterComponent extends BasePatientComponent
         $this->adjustEncounterClasses();
         $this->adjustEncounterTypes();
 
-        $this->patientUuid = $this->uuid;
+        $this->setPatientData();
         $this->getDivisionData();
         $this->getEpisodes();
     }
@@ -561,6 +585,20 @@ class EncounterComponent extends BasePatientComponent
         }
     }
 
+    /**
+     * Set patient and related data.
+     *
+     * @return void
+     */
+    protected function setPatientData(): void
+    {
+        $patient = Person::select(['uuid', 'first_name', 'last_name', 'second_name'])
+            ->where('id', $this->patientId)
+            ->firstOrFail();
+
+        $this->patientUuid = $patient->uuid;
+        $this->patientFullName = $patient->fullName;
+    }
 
     /**
      * Adjust episode types according to legal entity type and employee type.
