@@ -14,6 +14,7 @@ use App\Models\LegalEntity;
 use App\Repositories\MedicalEvents\Repository;
 use App\Traits\BatchLegalEntityQueries;
 use App\Traits\HandlesSyncBatch;
+use App\Livewire\Person\Records\PatientImmunization; //
 use Illuminate\View\View;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Session;
@@ -48,8 +49,19 @@ class PatientImmunization extends BasePatientComponent
 
     public int $pageSize = 10;
 
+    protected array $dictionaryNames = [
+        'eHealth/vaccine_codes',
+        'eHealth/vaccination_routes',
+        'eHealth/immunization_body_sites',
+        'eHealth/reason_explanations',
+        'eHealth/immunization_dosage_units',
+        'eHealth/vaccination_authorities',
+        'eHealth/vaccination_target_diseases',
+    ];
+
     protected function initializeComponent(): void
     {
+        $this->getDictionary();
         $this->loadEpisodes();
         $this->loadImmunizations($this->buildSearchParams());
     }
@@ -159,6 +171,7 @@ class PatientImmunization extends BasePatientComponent
             $this->pageSize = $paging['page_size'] ?? 10;
 
             $this->immunizations = Arr::toCamelCase($validatedData);
+            //dd($this->immunizations);
         } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
             $this->immunizations = [];
 
@@ -191,7 +204,7 @@ class PatientImmunization extends BasePatientComponent
             'episode_id' => $this->filterEpisodeId ?: null,
             'date_from' => $this->filterDateFrom ?: null,
             'date_to' => $this->filterDateTo ?: null,
-            'page' => Paginator::resolveCurrentPage(),
+            'page' => $this->getPage(),
         ], static fn ($value) => $value !== null && $value !== '');
     }
 
@@ -201,7 +214,7 @@ class PatientImmunization extends BasePatientComponent
             $this->immunizations,
             $this->totalEntries,
             $this->pageSize,
-            Paginator::resolveCurrentPage(),
+            $this->getPage(),
             ['path' => request()->url()]
         );
     }
