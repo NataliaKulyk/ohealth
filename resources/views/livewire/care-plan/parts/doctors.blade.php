@@ -2,7 +2,7 @@
           x-data="{ coAuthors: $wire.entangle('form.coAuthors') }"
           x-init="if (!Array.isArray(coAuthors)) { coAuthors = [] }">
     <legend class="legend">
-        <h2>{{ __('Лікарі') }}</h2>
+        {{ __('care-plan.doctors') ?? 'Лікарі' }}
     </legend>
 
     <div class="form">
@@ -16,7 +16,7 @@
                        placeholder=" "
                        required>
                 <label for="author" class="label">
-                    {{ __('care-plan.author') }}
+                    {{ __('care-plan.author') ?? 'Автор' }}
                 </label>
                 @error('form.author') <p class="text-error">{{ $message }}</p> @enderror
             </div>

@@ -5,45 +5,6 @@
 
     <div class="form-row-2">
         <div class="form-group group">
-            <label for="clinical_protocol" class="label">
-                {{ __('care-plan.clinical_protocol') }}
-            </label>
-            <input type="text"
-                   name="clinical_protocol"
-                   id="clinical_protocol"
-                   class="input peer"
-                   placeholder="R53.0"
-                   wire:model="form.clinical_protocol"
-            >
-            @error('form.clinical_protocol')
-            <p class="text-error">{{ $message }}</p>
-            @enderror
-        </div>
-
-        <div class="form-group group">
-            <label for="context" class="label">
-                {{ __('care-plan.context') }}
-            </label>
-            <select id="context"
-                    name="context"
-                    class="input-select peer"
-                    wire:model="form.context"
-            >
-                <option value="">{{ __('forms.select') }}</option>
-                @isset($dictionaries['encounter_classes'])
-                    @foreach($dictionaries['encounter_classes'] as $code => $description)
-                        <option value="{{ $code }}">{{ $description }}</option>
-                    @endforeach
-                @endisset
-            </select>
-            @error('form.context')
-            <p class="text-error">{{ $message }}</p>
-            @enderror
-        </div>
-    </div>
-
-    <div class="form-row-2 mt-5">
-        <div class="form-group group">
             <label for="category" class="label">
                 {{ __('care-plan.category') }}
             </label>
@@ -68,7 +29,7 @@
             <input type="text"
                    name="title"
                    id="title"
-                   class="input-select peer"
+                   class="input peer"
                    placeholder=" "
                    autocomplete="off"
                    wire:model="form.title"
@@ -83,7 +44,7 @@
         </div>
     </div>
 
-    <div class="form-row-2">
+    <div class="form-row-2 mt-5">
         <div class="form-group group">
             <label for="intent" class="label">
                 {{ __('care-plan.intention') }}
@@ -104,46 +65,104 @@
             @enderror
         </div>
 
-    </div>
-
-    <div class="form-row-2 mt-5">
         <div class="form-group group">
-            <input type="text"
-                   name="period_start"
-                   id="period_start"
-                   class="peer input pl-10 appearance-none datepicker-input dark:text-white"
-                   placeholder=" "
-                   required
-                   datepicker-autohide
-                   datepicker-format="{{ frontendDateFormat() }}"
-                   datepicker-button="false"
-                   wire:model.lazy="form.period_start"
-            />
-            <label for="period_start" class="wrapped-label">
-                {{ __('care-plan.date_and_time_start') }}
+            <label for="context" class="label">
+                {{ __('care-plan.conditions_of_service') ?? 'Умови надання послуг' }}
             </label>
-            @error('form.period_start')
+            <select id="context"
+                    name="context"
+                    class="input-select peer"
+                    wire:model="form.context"
+            >
+                <option value="">{{ __('forms.select') }}</option>
+                @isset($dictionaries['encounter_classes'])
+                    @foreach($dictionaries['encounter_classes'] as $code => $description)
+                        <option value="{{ $code }}">{{ $description }}</option>
+                    @endforeach
+                @endisset
+            </select>
+            @error('form.context')
             <p class="text-error">{{ $message }}</p>
             @enderror
         </div>
+    </div>
 
-        <div class="form-group group">
-            <input type="text"
-                   name="period_end"
-                   id="period_end"
-                   class="peer input pl-10 appearance-none datepicker-input dark:text-white"
-                   placeholder=" "
-                   datepicker-autohide
-                   datepicker-format="{{ frontendDateFormat() }}"
-                   datepicker-button="false"
-                   wire:model.lazy="form.period_end"
-            />
-            <label for="period_end" class="wrapped-label">
+    <div class="mt-5 space-y-5">
+        <div class="w-full lg:w-1/2">
+            <label class="label mb-2 block">
+                {{ __('care-plan.date_and_time_start') }}
+            </label>
+            <div class="flex items-center gap-4">
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        @icon('calendar', 'w-5 h-5 text-gray-500')
+                    </div>
+                    <input type="text"
+                           name="period_start"
+                           id="period_start"
+                           class="peer input pl-10 appearance-none datepicker-input dark:text-white w-full"
+                           placeholder=" "
+                           required
+                           datepicker-autohide
+                           datepicker-format="{{ frontendDateFormat() }}"
+                           datepicker-button="false"
+                           wire:model.lazy="form.period_start"
+                    />
+                </div>
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        @icon('clock', 'w-5 h-5 text-gray-500')
+                    </div>
+                    <input type="time"
+                           name="period_start_time"
+                           id="period_start_time"
+                           class="peer input pl-10 appearance-none dark:text-white w-full"
+                           wire:model.lazy="form.period_start_time"
+                    />
+                </div>
+            </div>
+            <div class="flex justify-between w-full mt-1">
+                @error('form.period_start') <p class="text-error text-xs">{{ $message }}</p> @enderror
+                @error('form.period_start_time') <p class="text-error text-xs">{{ $message }}</p> @enderror
+            </div>
+        </div>
+
+        <div class="w-full lg:w-1/2">
+            <label class="label mb-2 block">
                 {{ __('care-plan.date_and_time_end') }}
             </label>
-            @error('form.period_end')
-            <p class="text-error">{{ $message }}</p>
-            @enderror
+            <div class="flex items-center gap-4">
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        @icon('calendar', 'w-5 h-5 text-gray-500')
+                    </div>
+                    <input type="text"
+                           name="period_end"
+                           id="period_end"
+                           class="peer input pl-10 appearance-none datepicker-input dark:text-white w-full"
+                           placeholder=" "
+                           datepicker-autohide
+                           datepicker-format="{{ frontendDateFormat() }}"
+                           datepicker-button="false"
+                           wire:model.lazy="form.period_end"
+                    />
+                </div>
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        @icon('clock', 'w-5 h-5 text-gray-500')
+                    </div>
+                    <input type="time"
+                           name="period_end_time"
+                           id="period_end_time"
+                           class="peer input pl-10 appearance-none dark:text-white w-full"
+                           wire:model.lazy="form.period_end_time"
+                    />
+                </div>
+            </div>
+            <div class="flex justify-between w-full mt-1">
+                @error('form.period_end') <p class="text-error text-xs">{{ $message }}</p> @enderror
+                @error('form.period_end_time') <p class="text-error text-xs">{{ $message }}</p> @enderror
+            </div>
         </div>
     </div>
 

@@ -1,13 +1,9 @@
-<fieldset class="fieldset" id="referral-section">
-    <legend class="legend">
-        {{ __('patients.referrals') }}
-    </legend>
-
+<div id="referral-section">
     <div x-data="{
         isReferralAvailable: false,
         referralType: $wire.entangle('form.encounter.referralType')
     }">
-        <div class="mb-8">
+        <div class="mb-8 mt-2">
             <div class="form-group group">
                 <input x-model="isReferralAvailable"
                        type="checkbox"
@@ -210,4 +206,4 @@
             </template>
         </div>
     </div>
-</fieldset>
+</div>

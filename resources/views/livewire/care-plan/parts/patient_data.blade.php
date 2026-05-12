@@ -8,7 +8,7 @@
             <input type="text"
                    name="patient"
                    id="patient"
-                   class="input-select peer"
+                   class="input peer"
                    placeholder=" "
                    autocomplete="off"
                    wire:model.live.debounce.300ms="form.patient"
@@ -39,25 +39,6 @@
 
             @error('form.patient')
             <p class="text-error" id="error-form-patient">{{ $message }}</p>
-            @enderror
-        </div>
-
-        <div class="form-group group">
-            <input type="text"
-                   name="medical_number"
-                   id="medical_number"
-                   class="input-select peer"
-                   placeholder=" "
-                   autocomplete="off"
-                   wire:model="form.medical_number"
-                   required
-            >
-
-            <label for="medical_number" class="label">
-                {{ __('care-plan.medical_number') }}
-            </label>
-            @error('form.medical_number')
-            <p class="text-error" id="error-form-medical_number">{{ $message }}</p>
             @enderror
         </div>
     </div>

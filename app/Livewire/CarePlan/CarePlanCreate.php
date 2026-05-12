@@ -38,8 +38,12 @@ class CarePlanCreate extends BasePatientComponent
         'title' => '',
         'intent' => 'order',
         'period_start' => '',
+        'period_start_time' => '',
         'period_end' => '',
+        'period_end_time' => '',
         'encounter' => '',
+        'based_on' => '',
+        'part_of' => '',
         'description' => '',
         'note' => '',
         'inform_with' => '',
@@ -58,22 +62,26 @@ class CarePlanCreate extends BasePatientComponent
     public ?array $dictionaries = [];
     public array $doctors = [];
 
-    public function mount(LegalEntity $legalEntity, ?int $id = null): void
+    public function mount(LegalEntity $legalEntity, ?int $personId = null): void
     {
-        $this->id = $id ?? (int) \App\Models\Person\Person::where('uuid', request()->query('patientUuid'))->value('id') ??
-                    (int) request()->query('id', 0);
+        $id = $personId ?? (int) request()->query('personId') ?? (int) request()->query('id');
 
-        if ($this->id) {
-            parent::mount($legalEntity, $this->id);
+        if (!$id && request()->query('patientUuid')) {
+            $id = (int) \App\Models\Person\Person::where('uuid', request()->query('patientUuid'))->value('id');
+        }
+
+        if ($id) {
+            parent::mount($legalEntity, $id);
         } else {
+            $this->personId = 0;
             $this->patientFullName = '';
             $this->uuid = '';
         }
 
-        $person = $this->id ? \App\Models\Person\Person::find($this->id) : null;
+        $person = $this->personId ? \App\Models\Person\Person::find($this->personId) : null;
         if ($person) {
             $this->form['patient'] = trim($person->last_name . ' ' . $person->first_name . ' ' . ($person->second_name ?? ''));
-            
+
             // Load abstract authentication methods for "inform_with" dropdown
             $this->authMethods = collect(\App\Enums\Person\AuthenticationMethod::cases())->map(fn($m) => [
                 'value' => $m->value,
@@ -86,7 +94,7 @@ class CarePlanCreate extends BasePatientComponent
             $this->form['encounter'] = $encounterUuid;
         } else {
             // If no encounter provided, try to find the latest one for this patient
-            $latestEncounter = \App\Models\MedicalEvents\Sql\Encounter::where('person_id', $this->id)
+            $latestEncounter = \App\Models\MedicalEvents\Sql\Encounter::where('person_id', $this->personId)
                 ->latest()
                 ->first();
             if ($latestEncounter) {
@@ -102,7 +110,7 @@ class CarePlanCreate extends BasePatientComponent
             if ($encounter) {
                 // Pre-fill medical number
                 $this->form['medical_number'] = (string) $encounter->id;
-                
+
                 // Pre-fill diagnoses for the UI list
                 $this->diagnoses = $encounter->diagnoses->map(fn($d) => [
                     'date' => $d->condition?->asserted_date?->format('d.m.Y') ?? '-',
@@ -209,8 +217,12 @@ class CarePlanCreate extends BasePatientComponent
             'form.context'          => 'nullable|string',
             'form.title'            => 'required|string',
             'form.period_start'     => 'required|string',
+            'form.period_start_time'=> 'nullable|string',
             'form.period_end'       => 'nullable|string',
+            'form.period_end_time'  => 'nullable|string',
             'form.encounter'        => 'nullable|string',
+            'form.based_on'         => 'nullable|string',
+            'form.part_of'          => 'nullable|string',
             'form.description'      => 'nullable|string',
             'form.note'             => 'nullable|string',
             'form.inform_with'      => 'nullable|string',
@@ -450,7 +462,7 @@ class CarePlanCreate extends BasePatientComponent
                 'message' => __('care-plan.signed_and_sent'),
                 'errors'  => [],
             ]);
-            $this->redirectRoute('persons.care-plans', [legalEntity(), 'id' => $this->id], navigate: true);
+            $this->redirectRoute('persons.care-plans', [legalEntity(), 'personId' => $this->personId], navigate: true);
 
         } catch (ConnectionException $exception) {
             Log::error('CarePlan: connection error: ' . $exception->getMessage());
@@ -483,7 +495,7 @@ class CarePlanCreate extends BasePatientComponent
      */
     protected function resolvePersonId(): ?int
     {
-        return $this->id;
+        return $this->personId;
     }
 
     /**

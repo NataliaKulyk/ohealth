@@ -1,6 +1,6 @@
 <x-layouts.patient :personId="$personId" :patientFullName="$patientFullName">
     <x-slot name="headerActions">
-        @can('create', \App\Models\MedicalEvents\Sql\CarePlan::class)
+        @can('create', \App\Models\CarePlan::class)
             <a href="{{ route('care-plan.create', [legalEntity(), 'personId' => $personId]) }}"
                class="flex items-center gap-2 button-primary px-5 py-2 text-sm shadow-sm"
             >

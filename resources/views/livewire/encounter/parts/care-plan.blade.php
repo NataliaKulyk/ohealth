@@ -7,7 +7,7 @@
             <p class="text-sm text-gray-500 dark:text-gray-400">
                 {{ __('care-plan.care_plans_description_in_encounter') ?? 'Плани лікування, пов’язані з цією взаємодією.' }}
             </p>
-            <a href="{{ route('care-plan.create', [legalEntity(), 'patientUuid' => $patientUuid, 'encounterUuid' => $form->encounter['uuid'] ?? '']) }}" 
+            <a href="{{ route('care-plan.create', [legalEntity(), 'personId' => $personId, 'encounterUuid' => $form->encounter['uuid'] ?? '']) }}" 
                target="_blank"
                class="button-primary-outline flex items-center gap-2">
                 @icon('plus', 'w-4 h-4')
@@ -19,7 +19,7 @@
         @php
             // Since we might not have a saved encounter yet, we show plans for the patient 
             // but highlight ones linked to this encounter if it exists.
-            $linkedCarePlans = \App\Models\CarePlan::where('person_id', $patientId)
+            $linkedCarePlans = \App\Models\CarePlan::where('person_id', $personId)
                 ->where('encounter_id', $form->encounter['id'] ?? 0)
                 ->get();
         @endphp
