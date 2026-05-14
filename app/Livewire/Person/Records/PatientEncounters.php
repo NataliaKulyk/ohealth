@@ -11,6 +11,8 @@ use App\Exceptions\EHealth\EHealthResponseException;
 use App\Exceptions\EHealth\EHealthValidationException;
 use App\Jobs\EncounterFullSync;
 use App\Models\LegalEntity;
+use App\Models\MedicalEvents\Sql\Encounter;
+use App\Models\MedicalEvents\Sql\Episode;
 use App\Models\MedicalEvents\Sql\Identifier;
 use App\Models\Person\Person;
 use App\Repositories\MedicalEvents\Repository;
@@ -85,12 +87,18 @@ class PatientEncounters extends BasePatientComponent
         $this->syncStatus = $status instanceof JobStatus ? $status->value : ($status ?? '');
 
         $person = Person::whereId($this->personId)
-            ->with(['episodes:person_id,uuid,name', 'encounters.incomingReferral', 'encounters.originEpisode'])
+            ->with(['episodes:person_id,uuid,name'])
             ->first();
 
         $this->episodes = $person->episodes->toArray();
 
-        $this->incomingReferrals = $person->encounters
+        $encountersModel = Encounter::where('person_id', $this->personId)
+            ->withRelationships()
+            ->get();
+
+        $this->encounters = Arr::toCamelCase($this->formatDatesForDisplay($encountersModel->toArray()));
+
+        $this->incomingReferrals = $encountersModel
             ->pluck('incomingReferral')
             ->filter()
             ->map(fn (Identifier $referral) => [
@@ -101,7 +109,7 @@ class PatientEncounters extends BasePatientComponent
             ->values()
             ->toArray();
 
-        $this->originEpisodes = $person->encounters
+        $this->originEpisodes = $encountersModel
             ->pluck('originEpisode')
             ->filter()
             ->map(fn (Identifier $referral) => [
