@@ -22,16 +22,7 @@ class EncounterForm extends BaseForm
         'diagnoses' => [],
         'reasons' => [],
         'actions' => [],
-        'referralType' => '',   
-        'referralNumber' => '',
-        'paperReferral' => [
-            'requisition' => '',
-            'requesterEmployeeName' => '',
-            'requesterLegalEntityEdrpou' => '',
-            'requesterLegalEntityName' => '',
-            'serviceRequestDate' => '',
-            'note' => '',
-        ]     
+        'referralType' => ''
     ];
 
     public array $episode = ['id' => '', 'typeCode' => '', 'name' => ''];
@@ -112,16 +103,8 @@ class EncounterForm extends BaseForm
                 'nullable',
                 'array'
             ],
-            'encounter.paperReferral.requisition' => [
-                'nullable',
-                'string',
-                'max:255'
-            ],
-            'encounter.paperReferral.requesterLegalEntityName' => [
-                'nullable',
-                'string',
-                'max:255'
-            ],
+            'encounter.paperReferral.requisition' => ['nullable', 'string', 'max:255'],
+            'encounter.paperReferral.requesterLegalEntityName' => ['nullable', 'string', 'max:255'],
             'encounter.paperReferral.requesterLegalEntityEdrpou' => [
                 Rule::requiredIf(($this->encounter['referralType'] ?? '') === 'paper'),
                 'nullable',
@@ -137,14 +120,9 @@ class EncounterForm extends BaseForm
             'encounter.paperReferral.serviceRequestDate' => [
                 Rule::requiredIf(($this->encounter['referralType'] ?? '') === 'paper'),
                 'nullable',
-                'date',
-                'before_or_equal:today'
+                'date'
             ],
-            'encounter.paperReferral.note' => [
-                'nullable',
-                'string',
-                'max:255'
-            ],
+            'encounter.paperReferral.note' => ['nullable', 'string', 'max:1000'],
 
             'episode.id' => [
                 'nullable',

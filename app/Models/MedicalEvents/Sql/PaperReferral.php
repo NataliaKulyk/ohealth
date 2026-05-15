@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\MedicalEvents\Sql;
 
+use App\Casts\EHealthTimestampCast;
 use Eloquence\Behaviours\HasCamelCasing;
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,7 +29,5 @@ class PaperReferral extends Model
         'updated_at'
     ];
 
-    protected $casts = [
-        'service_request_date' => 'date:Y-m-d'
-    ];
+    protected $casts = ['service_request_date' => EHealthTimestampCast::class];
 }

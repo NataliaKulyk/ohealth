@@ -8,7 +8,6 @@ use App\Contracts\FhirMapperContract;
 use App\Enums\Person\EncounterStatus;
 use App\Services\MedicalEvents\FhirResource;
 use Carbon\CarbonImmutable;
-use Carbon\Carbon;
 
 class EncounterMapper implements FhirMapperContract
 {
@@ -39,29 +38,17 @@ class EncounterMapper implements FhirMapperContract
                 ->toIdentifier($uuids['employee'])
         ];
 
-        if (($data['referralType'] ?? '') === 'electronic' && !empty($data['referralNumber'])) {
+        if ($data['referralType'] === 'electronic') {
             $result['incomingReferral'] = FhirResource::make()
                 ->coding('eHealth/resources', 'service_request')
                 ->toIdentifier($data['referralNumber']);
         }
 
-        if (($data['referralType'] ?? '') === 'paper' && !empty($data['paperReferral'])) {
-            $paperReferral = $data['paperReferral'];
-
-            $serviceRequestDate = $paperReferral['serviceRequestDate'] ?? null;
-
-            if (!empty($serviceRequestDate) && preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $serviceRequestDate)) {
-                $serviceRequestDate = Carbon::createFromFormat('d.m.Y', $serviceRequestDate)->format('Y-m-d');
-            }
-
-            $result['paperReferral'] = array_filter([
-                'requisition' => $paperReferral['requisition'] ?? null,
-                'requesterLegalEntityName' => $paperReferral['requesterLegalEntityName'] ?? null,
-                'requesterLegalEntityEdrpou' => $paperReferral['requesterLegalEntityEdrpou'] ?? null,
-                'requesterEmployeeName' => $paperReferral['requesterEmployeeName'] ?? null,
-                'serviceRequestDate' => $serviceRequestDate,
-                'note' => $paperReferral['note'] ?? null,
-            ], static fn ($value) => $value !== null && $value !== '');
+        if ($data['referralType'] === 'paper') {
+            $result['paperReferral'] = $data['paperReferral'];
+            $result['paperReferral']['serviceRequestDate'] = convertToEHealthISO8601(
+                $data['paperReferral']['serviceRequestDate']
+            );
         }
 
         if (!empty($data['priorityCode'])) {
@@ -124,29 +111,11 @@ class EncounterMapper implements FhirMapperContract
      * Populate flat form keys from a nested FHIR encounter. Used when loading an existing encounter for editing.
      *
      * @param  array  $data  FHIR encounter data
+     * @param  mixed  ...$context
      * @return array
      */
     public function fromFhir(array $data, mixed ...$context): array
     {
-        $incomingReferralValue = data_get($data, 'incomingReferral.identifier.value')
-            ?? data_get($data, 'incoming_referral.identifier.value')
-            ?? '';
-
-        $paperReferral = data_get($data, 'paperReferral')
-            ?? data_get($data, 'paper_referral')
-            ?? [];
-
-        $serviceRequestDate = data_get($paperReferral, 'serviceRequestDate')
-            ?? data_get($paperReferral, 'service_request_date')
-            ?? '';
-
-        if (!empty($serviceRequestDate)) {
-            $serviceRequestDate = CarbonImmutable::createFromFormat('Y-m-d', $serviceRequestDate)->format('d.m.Y');
-        }
-
-        $hasIncomingReferral = !empty($incomingReferralValue);
-        $hasPaperReferral = !empty($paperReferral);
-
         return [
             'classCode' => data_get($data, 'class.code'),
             'typeCode' => data_get($data, 'type.coding.0.code'),
@@ -174,23 +143,15 @@ class EncounterMapper implements FhirMapperContract
                 ])
                 ->toArray(),
             'referralType' => match (true) {
-                $hasIncomingReferral => 'electronic',
-                $hasPaperReferral => 'paper',
+                !empty(data_get($data, 'incoming_referral')) => 'electronic',
+                !empty(data_get($data, 'paper_referral')) => 'paper',
                 default => ''
             },
-            'referralNumber' => $incomingReferralValue,
-
+            'referralNumber' => data_get($data, 'incoming_referral.identifier.value', ''),
             'paperReferral' => [
-                'requisition' => data_get($paperReferral, 'requisition', ''),
-                'requesterEmployeeName' => data_get($paperReferral, 'requesterEmployeeName')
-                    ?? data_get($paperReferral, 'requester_employee_name', ''),
-                'requesterLegalEntityEdrpou' => data_get($paperReferral, 'requesterLegalEntityEdrpou')
-                    ?? data_get($paperReferral, 'requester_legal_entity_edrpou', ''),
-                'requesterLegalEntityName' => data_get($paperReferral, 'requesterLegalEntityName')
-                    ?? data_get($paperReferral, 'requester_legal_entity_name', ''),
-                'serviceRequestDate' => $serviceRequestDate,
-                'note' => data_get($paperReferral, 'note', ''),
-            ],
+                ...data_get($data, 'paper_referral', []),
+                'serviceRequestDate' => convertToAppDateFormat(data_get($data, 'paper_referral.serviceRequestDate'))
+            ]
         ];
     }
 }

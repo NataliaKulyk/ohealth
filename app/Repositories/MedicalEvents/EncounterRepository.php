@@ -48,7 +48,7 @@ class EncounterRepository extends BaseRepository
      * @return false|int
      * @throws Throwable
      */
-    public function store(array $encounterData, int $personId): false|int//add save to db
+    public function store(array $encounterData, int $personId): false|int
     {
         return DB::transaction(function () use ($encounterData, $personId) {
             $visit = Repository::identifier()->store($encounterData['visit']['identifier']['value']);
@@ -99,6 +99,10 @@ class EncounterRepository extends BaseRepository
                 'end' => $encounterData['period']['end']
             ]);
 
+            if (!empty($encounterData['paperReferral'])) {
+                Repository::paperReferral()->store($encounterData['paperReferral'], $encounter);
+            }
+
             $reasonIds = [];
 
             foreach ($encounterData['reasons'] as $reasonData) {
@@ -132,10 +136,6 @@ class EncounterRepository extends BaseRepository
             }
 
             $encounter->actions()->attach($actionIds);
-
-            if(!empty($encounterData['paperReferral'])) {
-                Repository::paperReferral()->store($encounterData['paperReferral'], $encounter);
-            }
 
             return $encounter->id;
         });
@@ -305,7 +305,7 @@ class EncounterRepository extends BaseRepository
      * @return void
      * @throws Throwable
      */
-    public function sync(int $personId, array $validatedData): void//add sync
+    public function sync(int $personId, array $validatedData): void
     {
         DB::transaction(function () use ($personId, $validatedData) {
             $apiUuids = collect($validatedData)->pluck('uuid')->toArray();
@@ -392,7 +392,7 @@ class EncounterRepository extends BaseRepository
                 $this->syncDiagnoses($encounter, $data['diagnoses'] ?? [], $existing);
                 $this->syncHospitalization($encounter, $data['hospitalization'] ?? null);
 
-                if(!empty($data['paper_referral'])) {
+                if (!empty($data['paper_referral'])) {
                     Repository::paperReferral()->sync($data['paper_referral'], $encounter, $existing);
                 } else {
                     $encounter->paperReferral?->delete();
