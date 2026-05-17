@@ -46,6 +46,12 @@ class Declaration extends Model
     ];
 
     #[Scope]
+    protected function active(Builder $query): Builder
+    {
+        return $query->whereIsActive(true)->whereStatus(Status::ACTIVE);
+    }
+
+    #[Scope]
     protected function filterByLegalEntityId(Builder $query, int $legalEntityId): Builder
     {
         return $query->whereLegalEntityId($legalEntityId);
@@ -99,14 +105,14 @@ class Declaration extends Model
             Employee::class,
             'reorganization_employee_declarations'
         )
-        ->using(ReorganizationEmployeeDeclaration::class)
-        ->withPivot([
-            'legal_entity_uuid',
-            'employee_uuid',
-            'declaration_uuid',
-            'person_uuid',
-            'declaration_number',
-            'authorize_with'
-        ]);
+            ->using(ReorganizationEmployeeDeclaration::class)
+            ->withPivot([
+                'legal_entity_uuid',
+                'employee_uuid',
+                'declaration_uuid',
+                'person_uuid',
+                'declaration_number',
+                'authorize_with'
+            ]);
     }
 }

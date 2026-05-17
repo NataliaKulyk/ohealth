@@ -75,7 +75,7 @@ trait HandlesSyncBatch
     protected function isSyncProcessing(string $entityType): bool
     {
         $batchName = $this->getBatchName($entityType);
-        $runningBatches = $this->findRunningBatchesByLegalEntity(legalEntity()->id);
+        $runningBatches = once(fn () => $this->findRunningBatchesByLegalEntity(legalEntity()->id));
 
         return $runningBatches->where('name', $batchName . '_' . $this->uuid)->isNotEmpty();
     }

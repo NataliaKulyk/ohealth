@@ -14,7 +14,6 @@ use App\Models\LegalEntity;
 use App\Models\MedicalEvents\Sql\Encounter;
 use App\Models\MedicalEvents\Sql\Episode;
 use App\Models\MedicalEvents\Sql\Identifier;
-use App\Models\Person\Person;
 use App\Repositories\MedicalEvents\Repository;
 use App\Traits\BatchLegalEntityQueries;
 use App\Traits\HandlesSyncBatch;
@@ -86,25 +85,12 @@ class PatientEncounters extends BasePatientComponent
         $status = legalEntity()->getEntityStatus(LegalEntity::ENTITY_ENCOUNTER);
         $this->syncStatus = $status instanceof JobStatus ? $status->value : ($status ?? '');
 
-        $person = Person::whereId($this->personId)
-            ->with([
-                'episodes:person_id,uuid,name', 
-                'encounters.incomingReferral', 
-                'encounters.paperReferral',
-                'encounters.originEpisode'
-            ])
-            ->first();
+        $this->episodes = Episode::wherePersonId($this->personId)->get()->toArray();
 
-        $this->episodes = $person->episodes->toArray();
-
-        $encountersModel = Encounter::where('person_id', $this->personId)
-            ->withRelationships()
-            ->get();
+        $encountersModel = Encounter::wherePersonId($this->personId)->withRelationships()->get();
 
         $this->encounters = Arr::toCamelCase($this->formatDatesForDisplay($encountersModel->toArray()));
-
-        $this->incomingReferrals = $encountersModel
-            ->pluck('incomingReferral')
+        $this->incomingReferrals = $encountersModel->pluck('incomingReferral')
             ->filter()
             ->map(fn (Identifier $referral) => [
                 'uuid' => $referral->value,
@@ -113,9 +99,7 @@ class PatientEncounters extends BasePatientComponent
             ->unique('uuid')
             ->values()
             ->toArray();
-
-        $this->originEpisodes = $encountersModel
-            ->pluck('originEpisode')
+        $this->originEpisodes = $encountersModel->pluck('originEpisode')
             ->filter()
             ->map(fn (Identifier $referral) => [
                 'uuid' => $referral->value,

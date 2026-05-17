@@ -47,28 +47,8 @@ class EpisodeRepository extends BaseRepository
                 'care_manager_id' => $careManager->id
             ]);
 
-            $episode->period()->create([
-                'start' => $data['period']['start']
-            ]);
+            $episode->period()->create(['start' => $data['period']['start']]);
         });
-    }
-
-    /**
-     * Get episode data that is related to the encounter.
-     *
-     * @param  int  $encounterId
-     * @return array|null
-     */
-    public function get(int $encounterId): ?array
-    {
-        return $this->model::with([
-            'type',
-            'managingOrganization',
-            'careManager'
-        ])
-            ->where('encounter_id', $encounterId)
-            ->first()
-            ?->toArray();
     }
 
     /**

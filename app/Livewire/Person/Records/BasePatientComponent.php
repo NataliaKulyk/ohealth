@@ -7,6 +7,7 @@ namespace App\Livewire\Person\Records;
 use App\Models\LegalEntity;
 use App\Models\Person\Person;
 use App\Traits\FormTrait;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -61,7 +62,7 @@ abstract class BasePatientComponent extends Component
     protected function loadPatientData(): void
     {
         $patient = Person::whereId($this->personId)
-            ->with(['declarations' => fn ($query) => $query->latest()->take(1)])
+            ->with(['declarations' => fn (HasMany $declaration) => $declaration->active()->latest()->take(1)])
             ->select(['id', 'uuid', 'first_name', 'last_name', 'second_name', 'verification_status'])
             ->firstOrFail();
 
