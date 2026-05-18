@@ -265,7 +265,7 @@ class CarePlanCreate extends BasePatientComponent
 
     public function openActivationManually(): void
     {
-        // Спробуємо знайти останній дозвіл (approval) для цього плану лікування
+        // Try to find the latest approval for this care plan
         if (!$this->approvalId && $this->carePlanUuid) {
             try {
                 $response = EHealth::approval()->getMany([
@@ -284,7 +284,7 @@ class CarePlanCreate extends BasePatientComponent
         if ($this->approvalId) {
             $this->showAuthModal = true;
         } else {
-            // Якщо ID взагалі немає, запропонуємо обрати метод (створити новий запит на дозвіл)
+            // If there is no approval ID, suggest selecting a verification method (create a new approval request)
             $this->openMethodSelectionModal();
         }
     }

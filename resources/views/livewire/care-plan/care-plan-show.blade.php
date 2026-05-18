@@ -41,7 +41,7 @@
                 $categoryLabel = $dictionaries['care_plan_categories'][$categoryCode] ?? $categoryCode;
             }
 
-            $intent = 'order'; // В ЕСОЗ плани завжди мають намір 'order'
+            $intent = 'order'; // In eHealth plans always have intent 'order'
             $tos = is_array($carePlan->terms_of_service) ? ($carePlan->terms_of_service['coding'][0]['code'] ?? ($carePlan->terms_of_service['text'] ?? '')) : $carePlan->terms_of_service;
         @endphp
 
