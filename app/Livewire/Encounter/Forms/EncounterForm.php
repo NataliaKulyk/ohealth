@@ -42,14 +42,174 @@ class EncounterForm extends BaseForm
     protected function rules(): array
     {
         $rules = [
-            'encounter.periodDate' => ['nullable', 'date'],
-            'encounter.periodStart' => ['nullable'],
-            'encounter.periodEnd' => ['nullable'],
-            'encounter.classCode' => ['nullable'],
-            'encounter.typeCode' => ['nullable'],
+            'episode.id' => [
+                'nullable',
+                Rule::requiredIf($this->component->episodeType === 'existing'),
+                'string',
+                'uuid'
+            ],
+            'episode.typeCode' => [
+                'nullable',
+                Rule::requiredIf($this->component->episodeType === 'new'),
+                'string',
+                new InDictionary('eHealth/episode_types')
+            ],
+            'episode.name' => [
+                'nullable',
+                Rule::requiredIf($this->component->episodeType === 'new'),
+                'string',
+                'max:255',
+                new Cyrillic()
+            ],
+            'encounter.visit.identifier.value' => ['nullable', 'string', 'max:64'],
+            'encounter.periodDate' => ['required', 'date', new PastDateTime()],
+            'encounter.periodStart' => ['required'],
+            'encounter.periodEnd' => ['required', 'after_or_equal:encounter.periodStart'],
+            'encounter.classCode' => ['required', 'string', new InDictionary('eHealth/encounter_classes')],
+            'encounter.typeCode' => ['required', 'string', new InDictionary('eHealth/encounter_types')],
+            'encounter.priorityCode' => [
+                'nullable',
+                new RequiredIf($this->encounter['classCode'] !== 'PHC'),
+                'string',
+                new InDictionary('eHealth/encounter_priority')
+            ],
+            'encounter.serviceType' => ['nullable', 'string', new InDictionary('eHealth/encounter_service_types')],
+            'encounter.reasons' => [
+                'nullable',
+                new RequiredIf($this->encounter['classCode'] === 'PHC'),
+                'array',
+                'min:1'
+            ],
+            'encounter.reasons.*' => ['string', new InDictionary('eHealth/ICPC2/reasons')],
+            'encounter.diagnoses' => [
+                'nullable',
+                Rule::requiredUnless('encounter.classCode', 'PHC'),
+                'array',
+                'min:1',
+                new OnlyOnePrimaryDiagnosis()
+            ],
+            'encounter.diagnoses.*.conditionCode' => ['required', 'string', new InDictionary([
+                'eHealth/ICPC2/condition_codes',
+                'eHealth/ICD10_AM/condition_codes'
+            ])],
+            'encounter.diagnoses.*.roleCode' => ['required', 'string', new InDictionary('eHealth/diagnosis_roles')],
+            'encounter.diagnoses.*.rank' => ['nullable', 'integer', 'min:1'],
+            'encounter.divisionId' => [
+                'nullable',
+                new RequiredIf(in_array($this->encounter['classCode'], ['AMB', 'EMER'], true)),
+                Rule::prohibitedIf($this->encounter['classCode'] === 'PHC'),
+                'string',
+                'uuid'
+            ],
+            'encounter.paperReferral.number' => ['nullable', 'string', 'max:64'],
+            'encounter.paperReferral.date' => ['nullable', 'date', new PastDateTime()],
+            'encounter.paperReferral.publicName' => ['nullable', 'string', 'max:255'],
+            'encounter.paperReferral.serviceType' => ['nullable', 'string', new InDictionary('eHealth/encounter_service_types')],
+
+            'conditions.*.clinicalStatus' => ['required', 'string', new InDictionary('eHealth/condition_clinical_statuses')],
+            'conditions.*.verificationStatus' => ['required', 'string', new InDictionary('eHealth/condition_verification_statuses')],
+            'conditions.*.severity' => ['nullable', 'string', new InDictionary('eHealth/condition_severities')],
+            'conditions.*.codeCode' => ['required', 'string'],
+            'conditions.*.codeSystem' => ['required', 'string'],
+            'conditions.*.onsetDate' => ['nullable', 'date', new PastDateTime()],
+            'conditions.*.primarySource' => ['required', 'boolean'],
+            'conditions.*.reportOrigin' => ['nullable', 'string', new InDictionary('eHealth/report_origins')],
+            'conditions.*.notes' => ['nullable', 'string', 'max:4000'],
+            'conditions.*.evidenceDetails.*.id' => ['required', 'string', 'uuid'],
+            'conditions.*.evidenceDetails.*.type' => ['required', 'string', 'in:condition,observation'],
+
+            'immunizations.*.status' => ['required', 'string', new InDictionary('eHealth/immunization_statuses')],
+            'immunizations.*.notGiven' => ['required', 'boolean'],
+            'immunizations.*.vaccineCode' => ['required', 'string', new InDictionary('eHealth/vaccine_codes')],
+            'immunizations.*.occurrenceDate' => ['required', 'date', new PastDateTime()],
+            'immunizations.*.primarySource' => ['required', 'boolean'],
+            'immunizations.*.reportOrigin' => ['nullable', 'string', new InDictionary('eHealth/immunization_report_origins')],
+            'immunizations.*.lotNumber' => ['nullable', 'string', 'max:64'],
+            'immunizations.*.expirationDate' => ['nullable', 'date'],
+            'immunizations.*.siteCode' => ['nullable', 'string', new InDictionary('eHealth/immunization_body_sites')],
+            'immunizations.*.routeCode' => ['nullable', 'string', new InDictionary('eHealth/vaccination_routes')],
+            'immunizations.*.doseQuantity' => ['nullable', 'numeric', 'min:0'],
+            'immunizations.*.doseUnitCode' => ['nullable', 'string', new InDictionary('eHealth/ucum/units')],
+            'immunizations.*.explanationReasonCode' => ['nullable', 'string', new InDictionary('eHealth/reason_explanations')],
+            'immunizations.*.explanationReasonNotGivenCode' => ['nullable', 'string', new InDictionary('eHealth/reason_not_given_explanations')],
+            'immunizations.*.vaccinationProtocols.*.description' => ['nullable', 'string', 'max:255'],
+            'immunizations.*.vaccinationProtocols.*.authorityCode' => ['nullable', 'string', new InDictionary('eHealth/vaccination_authorities')],
+            'immunizations.*.vaccinationProtocols.*.targetDiseaseCodes' => ['required', 'array', 'min:1'],
+            'immunizations.*.vaccinationProtocols.*.targetDiseaseCodes.*' => ['string', new InDictionary('eHealth/vaccination_target_diseases')],
+            'immunizations.*.vaccinationProtocols.*.doseSequence' => ['nullable', 'integer', 'min:1'],
+
+            'diagnosticReports.*.status' => ['required', 'string', 'in:final,preliminary'],
+            'diagnosticReports.*.categoryCode' => ['required', 'string', new InDictionary('eHealth/diagnostic_report_categories')],
+            'diagnosticReports.*.codeCode' => ['required', 'string', new InDictionary('eHealth/LOINC/observation_codes')],
+            'diagnosticReports.*.issuedDate' => ['required', 'date', new PastDateTime()],
+            'diagnosticReports.*.conclusion' => ['nullable', 'string', 'max:4000'],
+            'diagnosticReports.*.conclusionCode' => ['nullable', 'string'],
+
+            'observations.*.status' => ['required', 'string', new InDictionary('eHealth/observation_statuses')],
+            'observations.*.categoryCode' => ['required', 'string', new InDictionary('eHealth/observation_categories')],
+            'observations.*.codeCode' => ['required', 'string', new InDictionary([
+                'eHealth/LOINC/observation_codes',
+                'eHealth/custom/observation_codes'
+            ])],
+            'observations.*.effectiveDate' => ['required', 'date', new PastDateTime()],
+            'observations.*.issuedDate' => ['nullable', 'date', new PastDateTime()],
+            'observations.*.valueType' => ['required', 'string', 'in:valueQuantity,valueCodeableConcept,valueString,valueBoolean,valueInteger,valueDateTime,valuePeriod,valueSampledData'],
+            'observations.*.valueString' => ['nullable', 'string', 'max:4000'],
+            'observations.*.bodySiteCode' => ['nullable', 'string', new InDictionary('eHealth/body_sites')],
+            'observations.*.methodCode' => ['nullable', 'string', new InDictionary('eHealth/observation_methods')],
+
+            'procedures.*.status' => ['required', 'string', new InDictionary('eHealth/procedure_statuses')],
+            'procedures.*.categoryCode' => ['nullable', 'string', new InDictionary('eHealth/procedure_categories')],
+            'procedures.*.codeCode' => ['required', 'string', new InDictionary('custom/services')],
+            'procedures.*.performedDate' => ['required', 'date', new PastDateTime()],
+            'procedures.*.outcomeCode' => ['nullable', 'string', new InDictionary('eHealth/procedure_outcomes')],
+            'procedures.*.notes' => ['nullable', 'string', 'max:4000'],
+            'procedures.*.reasonReferences.*.id' => ['required', 'string', 'uuid'],
+            'procedures.*.reasonReferences.*.type' => ['required', 'string', 'in:condition,observation'],
+
+            'clinicalImpressions.*.status' => ['required', 'string', 'in:in-progress,completed,entered-in-error'],
+            'clinicalImpressions.*.date' => ['required', 'date', new PastDateTime()],
+            'clinicalImpressions.*.summary' => ['nullable', 'string', 'max:4000'],
+            'clinicalImpressions.*.supportingInfo.*.id' => ['required', 'string', 'uuid'],
+            'clinicalImpressions.*.supportingInfo.*.type' => ['required', 'string', 'in:condition,observation,procedure,diagnosticReport,encounter'],
         ];
 
+        if ($this->component->episodeType === 'new') {
+            $this->addAllowedEpisodeCareManagerEmployeeTypes($rules);
+        }
+
+        $this->addAllowedEncounterClasses($rules);
+        $this->addAllowedEncounterTypes($rules);
+        $this->addAllowedConditionCodes($rules);
+        $this->addPsychiatryEvidenceValidation($rules);
+        $this->addEmployeeTypeConditionsValidation($rules);
+        $this->addSpecialityConditionsValidation($rules);
+
+        foreach ($this->immunizations ?? [] as $i => $immunization) {
+            foreach ($immunization['vaccinationProtocols'] ?? [] as $p => $protocol) {
+                $rules["immunizations.$i.vaccinationProtocols.$p.doseSequence"][] = $this->requiredIfProtocolFieldsMandatory("immunizations.$i.vaccinationProtocols.$p.doseSequence");
+            }
+        }
+
+        foreach ($this->procedures ?? [] as $i => $procedure) {
+            foreach ($procedure['reasonReferences'] ?? [] as $r => $reference) {
+                $rules["procedures.$i.reasonReferences.$r.code"] = $this->reasonReferenceCodeRule("procedures.$i.reasonReferences.$r.code");
+            }
+        }
+
         return $rules;
+    }
+
+    /**
+     * @return array
+     */
+    public function signingRules(): array
+    {
+        return [
+            'knedp' => ['required', 'string'],
+            'keyContainerUpload' => ['required', 'file'],
+            'password' => ['required', 'string'],
+        ];
     }
 
     /**
@@ -270,6 +430,29 @@ class EncounterForm extends BaseForm
                 $fail(__('validation.custom.conditions.speciality_condition_code_forbidden', ['code' => $codeCode]));
             }
         };
+    }
+
+    /**
+     * @param  string  $attribute
+     * @return array
+     */
+    private function reasonReferenceCodeRule(string $attribute): array
+    {
+        $parts = explode('.', $attribute);
+        $type = $this->procedures[(int)$parts[1]]['reasonReferences'][(int)$parts[3]]['type'] ?? null;
+
+        $dictionaries = match ($type) {
+            'observation' => ['eHealth/LOINC/observation_codes', 'eHealth/ICF/classifiers'],
+            'condition' => ['eHealth/ICPC2/condition_codes', 'eHealth/ICD10_AM/condition_codes'],
+            default => [
+                'eHealth/LOINC/observation_codes',
+                'eHealth/ICF/classifiers',
+                'eHealth/ICPC2/condition_codes',
+                'eHealth/ICD10_AM/condition_codes',
+            ],
+        };
+
+        return ['nullable', 'string', new InDictionary($dictionaries)];
     }
 
     /**

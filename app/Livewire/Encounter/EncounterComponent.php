@@ -204,6 +204,10 @@ class EncounterComponent extends Component
      */
     public array $problems;
 
+    public string $eHealthRegistrationStatus;
+
+    public string $eHealthReferralStatus;
+
     /**
      * List of dictionary names.
      *
@@ -215,6 +219,7 @@ class EncounterComponent extends Component
         'eHealth/encounter_types',
         'eHealth/encounter_priority',
         'eHealth/episode_types',
+        'eHealth/ICD10_AM/condition_codes',
         'eHealth/ICPC2/condition_codes',
         'eHealth/ICPC2/reasons',
         'eHealth/ICPC2/actions',
@@ -312,8 +317,8 @@ class EncounterComponent extends Component
      */
     public function searchForReferralNumber(): void
     {
-        // Simplified: removed actual API call
-        Session::flash('info', 'Пошук направлення спрощено');
+        $buildSearchRequest = EncounterRequestApi::buildGetServiceRequestList($this->form->encounter['referralNumber'] ?? '');
+        ServiceRequestApi::searchForServiceRequestsByParams($buildSearchRequest);
     }
 
     /**
@@ -391,9 +396,29 @@ class EncounterComponent extends Component
      */
     public function searchEvidenceDetails(string $type): void
     {
-        // Simplified: returns empty results or static data
-        $this->evidenceDetails = [];
-        Session::flash('info', "Пошук $type спрощено");
+        try {
+            $api = $type === 'observation' ? EHealth::observation() : EHealth::condition();
+
+            $response = $api->getBySearchParams(
+                $this->patientUuid,
+                ['managing_organization_id' => legalEntity()->uuid]
+            );
+
+            $this->evidenceDetails = collect($response->validate())
+                ->when($type === 'observation', fn ($collection) => $collection->filter(
+                    static fn (array $item) => data_get($item, 'status') !== ObservationStatus::ENTERED_IN_ERROR->value
+                ))
+                ->map(static fn (array $item) => [
+                    'id' => data_get($item, 'uuid'),
+                    'insertedAt' => data_get($item, 'ehealth_inserted_at'),
+                    'codeCode' => data_get($item, 'code.coding.0.code'),
+                    'type' => $type
+                ])->values()->all();
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error while getting evidence details');
+
+            return;
+        }
     }
 
     /**
@@ -415,7 +440,27 @@ class EncounterComponent extends Component
      */
     public function searchClinicalImpressions(string $episodeId): void
     {
-        $this->clinicalImpressions = [];
+        if (empty($episodeId)) {
+            $this->addError('episode', 'Please select an episode first.');
+
+            return;
+        }
+
+        try {
+            $params = EncounterRequestApi::buildGetClinicalImpressionBySearchParams(
+                $this->patientUuid,
+                episodeUuid: $episodeId
+            );
+            $this->clinicalImpressions = PatientApi::getClinicalImpressionBySearchParams(
+                $this->patientUuid,
+                $params
+            )['data'];
+        } catch (eHealthApiException) {
+            Log::channel('e_health_errors')
+                ->error('Error while searching for clinical impressions in Encounter Component');
+
+            session()?->flash('error', __('messages.database_error'));
+        }
     }
 
     /**
@@ -436,7 +481,24 @@ class EncounterComponent extends Component
      */
     public function searchProblems(string $episodeId): void
     {
-        $this->problems = [];
+        if (!isset($episodeId)) {
+            return;
+        }
+
+        $buildGetConditions = EncounterRequestApi::buildGetConditionsInEpisodeContext($this->patientUuid, $episodeId);
+
+        try {
+            $this->problems = PatientApi::getConditionsInEpisodeContext(
+                $this->patientUuid,
+                $episodeId,
+                $buildGetConditions
+            )['data'];
+        } catch (eHealthApiException) {
+            Log::channel('e_health_errors')
+                ->error('Error while searching for problems in Encounter Component');
+
+            session()?->flash('error', __('messages.database_error'));
+        }
     }
 
     /**
@@ -448,9 +510,39 @@ class EncounterComponent extends Component
      */
     public function searchSupportingInfo(string $type, string $episodeId): void
     {
-        $this->encounters = [];
-        $this->procedures = [];
-        $this->diagnosticReports = [];
+        if (!isset($episodeId)) {
+            return;
+        }
+
+        try {
+            switch ($type) {
+                case 'encounter':
+                    $this->encounters = EHealth::encounter()->getBySearchParams(
+                        $this->patientUuid,
+                        ['episode_id' => $episodeId, 'managing_organization_id' => legalEntity()->uuid]
+                    )->getData();
+                    break;
+
+                case 'procedure':
+                    $this->procedures = EHealth::procedure()->getBySearchParams(
+                        $this->patientUuid,
+                        ['episode_id' => $episodeId, 'managing_organization_id' => legalEntity()->uuid]
+                    )->getData();
+                    break;
+
+                case 'diagnosticReport':
+                    $this->diagnosticReports = EHealth::diagnosticReport()->getBySearchParams(
+                        $this->patientUuid,
+                        ['origin_episode_id' => $episodeId, 'managing_organization_id' => legalEntity()->uuid]
+                    )->getData();
+                    break;
+
+                default:
+                    break;
+            }
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, "Error while searching for $type in Encounter Component");
+        }
     }
 
     protected function setPatientData(): void
@@ -518,7 +610,18 @@ class EncounterComponent extends Component
      */
     protected function getEpisodes(): void
     {
-        $this->episodes = [];
+        try {
+            $this->episodes = EHealth::episode()
+                ->getBySearchParams(
+                    $this->patientUuid,
+                    ['managing_organization_id' => legalEntity()->uuid, 'status' => EpisodeStatus::ACTIVE->value]
+                )
+                ->validate();
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when getting episodes');
+
+            return;
+        }
     }
 
     /**
@@ -528,8 +631,23 @@ class EncounterComponent extends Component
      */
     protected function loadRuleEngineRules(): void
     {
-        $this->dictionaries['custom/rule_engine_rule_list'] = [];
-        $this->dictionaries['custom/rule_engine_details'] = [];
+        $this->dictionaries['custom/rule_engine_rule_list'] = Cache::remember(
+            'rule_engine_rule_list',
+            now()->addDays(7),
+            static fn () => EHealth::ruleEngineRules()->getMany()->getData()
+        );
+
+        foreach ($this->dictionaries['custom/rule_engine_rule_list'] as $dictionary) {
+            $cacheKey = "rule_engine_details_{$dictionary['code']['code']}";
+
+            $details = Cache::remember(
+                $cacheKey,
+                now()->addDays(7),
+                static fn () => EHealth::ruleEngineRules()->get($dictionary['id'])->getData()
+            );
+
+            $this->dictionaries['custom/rule_engine_details'][$details['code']['code']] = $details;
+        }
     }
 
     /**

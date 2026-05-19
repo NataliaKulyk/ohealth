@@ -12,6 +12,7 @@ use App\Exceptions\EHealth\EHealthValidationException;
 use App\Jobs\EncounterFullSync;
 use App\Models\LegalEntity;
 use App\Models\MedicalEvents\Sql\Encounter;
+use App\Models\MedicalEvents\Sql\Episode;
 use App\Models\MedicalEvents\Sql\Identifier;
 use App\Repositories\MedicalEvents\Repository;
 use App\Traits\BatchLegalEntityQueries;
@@ -116,12 +117,29 @@ class PatientEncounters extends BasePatientComponent
 
     public function sync(): void
     {
-        Session::flash('success', 'Синхронізація спрощена (симуляція)');
+        try {
+            $this->startBatch('encounter');
+        } catch (Throwable $exception) {
+            $this->handleEHealthExceptions($exception, 'Error when starting encounter sync');
+        }
     }
 
     public function search(): void
     {
-        $this->encounters = [];
+        // todo: add period params after change in frontend
+        $params = array_filter([
+            'managing_organization_id' => legalEntity()->uuid,
+            'episode_id' => $this->filterEpisode ?: null,
+            'incoming_referral_id' => $this->filterIncomingReferral ?: null,
+            'origin_episode_id' => $this->filterOriginEpisode ?: null
+        ]);
+
+        try {
+            $response = EHealth::encounter()->getBySearchParams($this->uuid, $params);
+            $this->encounters = Arr::toCamelCase($this->formatDatesForDisplay($response->validate()));
+        } catch (ConnectionException|EHealthValidationException|EHealthResponseException $exception) {
+            $this->handleEHealthExceptions($exception, 'Error while searching encounters');
+        }
     }
 
     public function resetFilters(): void
