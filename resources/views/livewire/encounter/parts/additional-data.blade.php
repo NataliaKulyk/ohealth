@@ -1,4 +1,52 @@
-<div class="p-5 space-y-6">
+<div class="p-5 space-y-6" x-data="{
+    showReferencesDrawer: false,
+    selectedType: 'condition',
+    selectedEpisode: 'ep-1',
+    searchQuery: '',
+    selectedReferences: [],
+
+    allRecords: [
+        { id: 'rec-1', date: '08.05.2025', type: 'condition', typeLabel: '{{ __('patients.condition_or_diagnosis') }}', code: 'A98', name: '{{ __('patients.mock.name_A98') }}', episode: 'ep-1', episodeLabel: '{{ __('patients.mock.episode_1') }}' },
+        { id: 'rec-2', date: '08.05.2025', type: 'observation', typeLabel: '{{ __('patients.medical_observation') }}', code: '59041-4', name: '{{ __('patients.mock.name_59041_4') }}', episode: 'ep-1', episodeLabel: '{{ __('patients.mock.episode_1') }}' },
+        { id: 'rec-3', date: '08.05.2025', type: 'diagnostic-report', typeLabel: '{{ __('patients.medical_diagnostic_report') }}', code: '11502-2', name: '{{ __('patients.mock.name_11502_2') }}', episode: 'ep-1', episodeLabel: '{{ __('patients.mock.episode_1') }}' },
+        { id: 'rec-4', date: '01.05.2025', type: 'condition', typeLabel: '{{ __('patients.condition_or_diagnosis') }}', code: 'I10', name: '{{ __('patients.mock.name_I10') }}', episode: 'ep-2', episodeLabel: '{{ __('patients.mock.episode_2') }}' },
+        { id: 'rec-5', date: '01.05.2025', type: 'observation', typeLabel: '{{ __('patients.medical_observation') }}', code: '85354-9', name: '{{ __('patients.mock.name_85354_9') }}', episode: 'ep-2', episodeLabel: '{{ __('patients.mock.episode_2') }}' }
+    ],
+
+    addReference(record) {
+        if (!this.selectedReferences.some(r => r.id === record.id)) {
+            this.selectedReferences.push(record);
+        }
+        this.showReferencesDrawer = false;
+        this.searchQuery = '';
+    },
+    cancelSelection() {
+        this.showReferencesDrawer = false;
+        this.searchQuery = '';
+    },
+    removeReference(id) {
+        this.selectedReferences = this.selectedReferences.filter(r => r.id !== id);
+    },
+    filteredRecords() {
+        return this.allRecords.filter(rec => {
+            // Search Query Filter
+            if (this.searchQuery) {
+                const query = this.searchQuery.toLowerCase();
+                const matchesSearch = rec.name.toLowerCase().includes(query) || rec.code.toLowerCase().includes(query);
+                if (!matchesSearch) return false;
+            }
+            // Type Filter
+            if (this.selectedType !== 'ALL') {
+                if (rec.type !== this.selectedType) return false;
+            }
+            // Episode Filter
+            if (this.selectedEpisode !== 'ALL') {
+                if (rec.episode !== this.selectedEpisode) return false;
+            }
+            return true;
+        });
+    }
+}">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="form-group group">
             <div class="relative">
@@ -117,40 +165,104 @@
         </label>
         <textarea
             class="w-full min-h-[120px] p-4 text-[15px] text-gray-900 dark:text-white bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none resize-none"
-            placeholder="Напишіть призначення тут"
+            placeholder="{{ __('patients.write_assignments_here') }}"
         ></textarea>
     </div>
 
-    <div class="space-y-3">
-        <div class="form-group group">
-            <select class="input-select peer">
-                <option value="" selected>Пошук послуг</option>
-            </select>
-            <label class="label">Послуги</label>
+    <div x-data="{ services: [''], coAuthors: [''] }" class="space-y-6">
+        <div class="space-y-3">
+            <template x-for="(service, index) in services" :key="index">
+                <div class="relative pr-10">
+                    <div class="form-group group">
+                        <select class="input-select peer" :id="'service_' + index" x-model="services[index]">
+                            <option value="" selected>{{ __('dictionaries.search_services') }}</option>
+                            @foreach($this->dictionaries['custom/services'] ?? [] as $key => $service)
+                                <option value="{{ $service['id'] ?? $key }}">{{ $service['name'] ?? $service }}</option>
+                            @endforeach
+                        </select>
+                        <label :for="'service_' + index" class="label">{{ __('care-plan.services') }}</label>
+                    </div>
+                    <button type="button"
+                            x-show="index > 0"
+                            @click="services.splice(index, 1)"
+                            class="absolute right-0 top-3 text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors">
+                        @icon('delete', 'w-6 h-6')
+                    </button>
+                </div>
+            </template>
+            <button type="button" @click="services.push('')" class="cursor-pointer text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1.5 font-medium text-sm transition-colors ml-1">
+                @icon('plus', 'w-4 h-4')
+                <span>{{ __('care-plan.add_service') }}</span>
+            </button>
         </div>
-        <button type="button" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 font-medium text-sm transition-colors ml-1">
-            + Додати послугу
-        </button>
-    </div>
 
-    <div class="space-y-3">
-        <div class="form-group group">
-            <select class="input-select peer">
-                <option value="" selected>Знайти лікаря</option>
-            </select>
-            <label class="label">Співавтор</label>
+        <div class="space-y-3">
+            <template x-for="(coAuthor, index) in coAuthors" :key="index">
+                <div class="relative pr-10">
+                    <div class="form-group group">
+                        <select class="input-select peer" :id="'coAuthor_' + index" x-model="coAuthors[index]">
+                            <option value="" selected>{{ __('patients.find_doctor') }}</option>
+                            @foreach($employees as $employee)
+                                <option value="{{ $employee['uuid'] }}">{{ $employee['name'] }}</option>
+                            @endforeach
+                        </select>
+                        <label :for="'coAuthor_' + index" class="label">{{ __('patients.coauthor') }}</label>
+                    </div>
+                    <button type="button"
+                            x-show="index > 0"
+                            @click="coAuthors.splice(index, 1)"
+                            class="absolute right-0 top-3 text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors">
+                        @icon('delete', 'w-6 h-6')
+                    </button>
+                </div>
+            </template>
+            <button type="button" @click="coAuthors.push('')" class="cursor-pointer text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1.5 font-medium text-sm transition-colors ml-1">
+                @icon('plus', 'w-4 h-4')
+                <span>{{ __('patients.add_coauthor') }}</span>
+            </button>
         </div>
-        <button type="button" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 font-medium text-sm transition-colors ml-1">
-            + Додати співавтора
-        </button>
     </div>
 
     <div class="pt-4 border-t border-gray-100 dark:border-gray-700 space-y-4">
         <h3 class="text-[15px] font-bold text-gray-900 dark:text-white">
-            Медичні записи, на які посилається взаємодія
+            {{ __('patients.medical_records_referenced_by_interaction') }}
         </h3>
-        <button type="button" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 font-medium text-sm transition-colors">
-            + Додати медичні спостереження, діагностичні звіти або стани
+
+        <div x-show="selectedReferences.length > 0" x-cloak class="my-3 overflow-x-auto">
+            <table class="table-input w-inherit">
+                <thead class="thead-input">
+                    <tr>
+                        <th scope="col" class="th-input w-[15%] uppercase">{{ mb_strtoupper(__('forms.date')) }}</th>
+                        <th scope="col" class="th-input w-[75%] uppercase">{{ mb_strtoupper(__('forms.name')) }}</th>
+                        <th scope="col" class="th-input text-right pr-8 w-[10%] uppercase">{{ mb_strtoupper(__('forms.actions')) }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="ref in selectedReferences" :key="ref.id">
+                        <tr class="border-b border-gray-200 dark:border-gray-700">
+                            <td class="td-input text-[14px] text-gray-900 dark:text-gray-300" x-text="ref.date"></td>
+                            <td class="td-input text-[14px] text-gray-900 dark:text-white" x-text="ref.typeLabel + ' ' + ref.name"></td>
+                            <td class="td-input text-right pr-8">
+                                <button type="button"
+                                        @click="removeReference(ref.id)"
+                                        class="text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors p-1"
+                                >
+                                    @icon('delete', 'w-5 h-5')
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <button type="button"
+                @click="showReferencesDrawer = true"
+                class="cursor-pointer text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1.5 font-medium text-sm transition-colors block">
+            @icon('plus', 'w-4 h-4')
+            <span>{{ __('patients.add_observations_reports_conditions') }}</span>
         </button>
+
+        @include('livewire.encounter.parts.references-drawer')
     </div>
 </div>

@@ -24,7 +24,7 @@
                         x-text="new Date(supporting.inserted_at).toLocaleDateString('uk-UA')"
                     ></td>
                     <td class="td-input"
-                        x-text="'Епізод' + `${ supporting.code ? ' : ' + supporting.code + ' ' + (
+                                    x-text="'{{ __('patients.episode') }}' + `${ supporting.code ? ' : ' + supporting.code + ' ' + (
                             $wire.dictionaries['eHealth/LOINC/observation_codes'][supporting.code] ||
                             $wire.dictionaries['eHealth/ICF/classifiers'][supporting.code] ||
                             $wire.dictionaries['eHealth/ICPC2/condition_codes'][supporting.code] || ''

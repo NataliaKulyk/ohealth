@@ -1,5 +1,5 @@
 @php
-    $patientName = $patientFullName ?? 'Пацієнт';
+    $patientName = $patientFullName ?? __('forms.patient');
     $title = __('patients.encounter') . ' - ' . $patientName;
 
     $mainGroups = [
@@ -25,7 +25,7 @@
     :hideNavigation="true"
     :title="$title"
     :breadcrumbs="[
-        ['label' => __('Головна'), 'url' => route('dashboard', [legalEntity()])],
+        ['label' => __('general.home'), 'url' => route('dashboard', [legalEntity()])],
         ['label' => $patientName]
     ]"
 >
@@ -82,26 +82,26 @@
                 @endforeach
 
                 <div class="mt-4">
-                    <fieldset class="fieldset bg-white dark:bg-gray-800 !rounded-xl !shadow-none !border-gray-100 dark:!border-gray-700">
-                        <legend class="legend">Статус ЕСОЗ</legend>
+                    <fieldset class="fieldset-card p-4 sm:p-8 sm:pb-10 mb-4">
+                        <legend class="legend">{{ __('patients.ehealth_status') }}</legend>
                         
                         <div class="flex flex-col sm:flex-row sm:items-end gap-6 mb-2">
                             <div class="form-group group flex-1">
                                 <input type="text"
                                        id="ehealthStatus"
                                        class="input peer text-gray-500"
-                                       value="Підписано"
+                                       value="{{ __('patients.signed') }}"
                                        readonly
                                        placeholder=" "
                                 />
                                 <label for="ehealthStatus" class="label">
-                                    Статус підписання
+                                    {{ __('patients.signing_status') }}
                                 </label>
                             </div>
                             
                             <div class="mb-1">
                                 <button type="button" class="button-primary px-8">
-                                    Оновити
+                                    {{ __('forms.update') }}
                                 </button>
                             </div>
                         </div>
@@ -110,34 +110,38 @@
 
                 <!-- Additional Actions -->
                 <div class="pt-10 mt-10 border-t border-gray-100 dark:border-gray-700">
-                    <h3 class="text-[17px] font-bold text-gray-900 dark:text-gray-100 mb-6">Додаткові дії</h3>
+                    <h3 class="text-[17px] font-bold text-gray-900 dark:text-gray-100 mb-6">{{ __('patients.additional_actions') }}</h3>
                     
                     <div class="space-y-6">
-                        <fieldset class="fieldset !p-5 bg-white dark:bg-gray-800 !rounded-xl !shadow-none !border-gray-100 dark:!border-gray-700">
-                            <legend class="legend">Рецепти</legend>
-                            <button type="button" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 font-medium text-sm transition-colors">
-                                + Додати рецепт
+                        <fieldset class="fieldset-card p-5">
+                            <legend class="legend">{{ __('patients.prescriptions') }}</legend>
+                            <button type="button" class="cursor-pointer text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1.5 font-medium text-sm transition-colors">
+                                @icon('plus', 'w-4 h-4')
+                                <span>{{ __('patients.add_prescription') }}</span>
                             </button>
                         </fieldset>
 
-                        <fieldset class="fieldset !p-5 bg-white dark:bg-gray-800 !rounded-xl !shadow-none !border-gray-100 dark:!border-gray-700">
-                            <legend class="legend">Направлення</legend>
-                            <button type="button" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 font-medium text-sm transition-colors">
-                                + Додати направлення
+                        <fieldset class="fieldset-card p-5">
+                            <legend class="legend">{{ __('patients.referrals') }}</legend>
+                            <button type="button" class="cursor-pointer text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1.5 font-medium text-sm transition-colors">
+                                @icon('plus', 'w-4 h-4')
+                                <span>{{ __('patients.add_referral') }}</span>
                             </button>
                         </fieldset>
 
-                        <fieldset class="fieldset !p-5 bg-white dark:bg-gray-800 !rounded-xl !shadow-none !border-gray-100 dark:!border-gray-700">
-                            <legend class="legend">Медичні висновки</legend>
-                            <button type="button" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 font-medium text-sm transition-colors">
-                                + Додати медичний висновок
+                        <fieldset class="fieldset-card p-5">
+                            <legend class="legend">{{ __('patients.medical_reports') }}</legend>
+                            <button type="button" class="cursor-pointer text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1.5 font-medium text-sm transition-colors">
+                                @icon('plus', 'w-4 h-4')
+                                <span>{{ __('patients.add_medical_report') }}</span>
                             </button>
                         </fieldset>
 
-                        <fieldset class="fieldset !p-5 bg-white dark:bg-gray-800 !rounded-xl !shadow-none !border-gray-100 dark:!border-gray-700">
-                            <legend class="legend">Плани лікування</legend>
-                            <a href="{{ route('care-plan.create', [legalEntity(), 'personId' => $personId, 'encounterUuid' => $form->encounter['uuid'] ?? '']) }}" class="inline-flex text-blue-600 dark:text-blue-400 hover:text-blue-700 font-medium text-sm transition-colors">
-                                + Додати план лікування
+                        <fieldset class="fieldset-card p-5">
+                            <legend class="legend">{{ __('patients.care_plans') }}</legend>
+                            <a href="{{ route('care-plan.create', [legalEntity(), 'personId' => $personId, 'encounterUuid' => $form->encounter['uuid'] ?? '']) }}" class="cursor-pointer text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1.5 font-medium text-sm transition-colors">
+                                @icon('plus', 'w-4 h-4')
+                                <span>{{ __('patients.add_care_plan') }}</span>
                             </a>
                         </fieldset>
                     </div>
@@ -147,7 +151,7 @@
                 <div class="pt-8">
                     <div class="flex flex-wrap gap-4">
                         <button type="button" class="button-primary-outline-red">
-                            Взаємодія внесена помилково
+                            {{ __('patients.encounter_entered_in_error') }}
                         </button>
                     </div>
                 </div>

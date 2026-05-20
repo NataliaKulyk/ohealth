@@ -5,7 +5,7 @@
 
         <div class="flex items-center justify-between mb-4">
             <p class="text-sm text-gray-500 dark:text-gray-400">
-                {{ __('care-plan.care_plans_description_in_encounter') ?? 'Плани лікування, пов’язані з цією взаємодією.' }}
+                {{ __('care-plan.care_plans_description_in_encounter') }}
             </p>
             <a href="{{ route('care-plan.create', [legalEntity(), 'personId' => $personId, 'encounterUuid' => $form->encounter['uuid'] ?? '']) }}" 
                target="_blank"
