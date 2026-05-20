@@ -1,3 +1,13 @@
+<script>
+    window.encounterMockRecords = [
+        { id: 'rec-1', date: '08.05.2025', type: 'condition', typeLabel: @json(__('patients.condition_or_diagnosis')), code: 'A98', name: @json(__('patients.mock.name_A98')), episode: 'ep-1', episodeLabel: @json(__('patients.mock.episode_1')) },
+        { id: 'rec-2', date: '08.05.2025', type: 'observation', typeLabel: @json(__('patients.medical_observation')), code: '59041-4', name: @json(__('patients.mock.name_59041_4')), episode: 'ep-1', episodeLabel: @json(__('patients.mock.episode_1')) },
+        { id: 'rec-3', date: '08.05.2025', type: 'diagnostic-report', typeLabel: @json(__('patients.medical_diagnostic_report')), code: '11502-2', name: @json(__('patients.mock.name_11502_2')), episode: 'ep-1', episodeLabel: @json(__('patients.mock.episode_1')) },
+        { id: 'rec-4', date: '01.05.2025', type: 'condition', typeLabel: @json(__('patients.condition_or_diagnosis')), code: 'I10', name: @json(__('patients.mock.name_I10')), episode: 'ep-2', episodeLabel: @json(__('patients.mock.episode_2')) },
+        { id: 'rec-5', date: '01.05.2025', type: 'observation', typeLabel: @json(__('patients.medical_observation')), code: '85354-9', name: @json(__('patients.mock.name_85354_9')), episode: 'ep-2', episodeLabel: @json(__('patients.mock.episode_2')) }
+    ];
+</script>
+
 <div class="p-5 space-y-6" x-data="{
     showReferencesDrawer: false,
     selectedType: 'condition',
@@ -5,13 +15,7 @@
     searchQuery: '',
     selectedReferences: [],
 
-    allRecords: [
-        { id: 'rec-1', date: '08.05.2025', type: 'condition', typeLabel: '{{ __('patients.condition_or_diagnosis') }}', code: 'A98', name: '{{ __('patients.mock.name_A98') }}', episode: 'ep-1', episodeLabel: '{{ __('patients.mock.episode_1') }}' },
-        { id: 'rec-2', date: '08.05.2025', type: 'observation', typeLabel: '{{ __('patients.medical_observation') }}', code: '59041-4', name: '{{ __('patients.mock.name_59041_4') }}', episode: 'ep-1', episodeLabel: '{{ __('patients.mock.episode_1') }}' },
-        { id: 'rec-3', date: '08.05.2025', type: 'diagnostic-report', typeLabel: '{{ __('patients.medical_diagnostic_report') }}', code: '11502-2', name: '{{ __('patients.mock.name_11502_2') }}', episode: 'ep-1', episodeLabel: '{{ __('patients.mock.episode_1') }}' },
-        { id: 'rec-4', date: '01.05.2025', type: 'condition', typeLabel: '{{ __('patients.condition_or_diagnosis') }}', code: 'I10', name: '{{ __('patients.mock.name_I10') }}', episode: 'ep-2', episodeLabel: '{{ __('patients.mock.episode_2') }}' },
-        { id: 'rec-5', date: '01.05.2025', type: 'observation', typeLabel: '{{ __('patients.medical_observation') }}', code: '85354-9', name: '{{ __('patients.mock.name_85354_9') }}', episode: 'ep-2', episodeLabel: '{{ __('patients.mock.episode_2') }}' }
-    ],
+    allRecords: window.encounterMockRecords,
 
     addReference(record) {
         if (!this.selectedReferences.some(r => r.id === record.id)) {
@@ -29,17 +33,14 @@
     },
     filteredRecords() {
         return this.allRecords.filter(rec => {
-            // Search Query Filter
             if (this.searchQuery) {
                 const query = this.searchQuery.toLowerCase();
                 const matchesSearch = rec.name.toLowerCase().includes(query) || rec.code.toLowerCase().includes(query);
                 if (!matchesSearch) return false;
             }
-            // Type Filter
             if (this.selectedType !== 'ALL') {
                 if (rec.type !== this.selectedType) return false;
             }
-            // Episode Filter
             if (this.selectedEpisode !== 'ALL') {
                 if (rec.episode !== this.selectedEpisode) return false;
             }
@@ -175,7 +176,7 @@
                 <div class="relative pr-10">
                     <div class="form-group group">
                         <select class="input-select peer" :id="'service_' + index" x-model="services[index]">
-                            <option value="" selected>{{ __('dictionaries.search_services') }}</option>
+                            <option value="" selected>{{ __('dictionaries.service_catalog.search_services') }}</option>
                             @foreach($this->dictionaries['custom/services'] ?? [] as $key => $service)
                                 <option value="{{ $service['id'] ?? $key }}">{{ $service['name'] ?? $service }}</option>
                             @endforeach
