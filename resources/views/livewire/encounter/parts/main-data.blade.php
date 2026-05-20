@@ -1,7 +1,5 @@
 <div class="p-4 sm:p-8" id="patient-data-section">
 
-
-
     <div class="form-row-3">
         <div class="form-group group">
             <select wire:model="form.encounter.classCode"
@@ -9,7 +7,8 @@
                     class="input-select peer @error('form.encounter.classCode') input-error @enderror"
                     required
             >
-                <option value="" selected>{{ __('forms.select') }} {{ mb_strtolower(__('patients.interaction_class')) }}*
+                <option value="" selected>{{ __('forms.select') }} {{ mb_strtolower(__('patients.interaction_class')) }}
+                    *
                 </option>
                 @foreach($this->dictionaries['eHealth/encounter_classes'] as $key => $encounterClass)
                     <option value="{{ $key }}">{{ $encounterClass }}</option>
@@ -111,7 +110,8 @@
                             class="input-select peer @error('form.episode.typeCode') input-error @enderror"
                             required
                     >
-                        <option value="" selected>{{ __('forms.select') }} {{ mb_strtolower(__('patients.episode_type')) }}*
+                        <option value=""
+                                selected>{{ __('forms.select') }} {{ mb_strtolower(__('patients.episode_type')) }}*
                         </option>
                         @foreach($this->dictionaries['eHealth/episode_types'] as $key => $episodeType)
                             <option value="{{ $key }}">{{ $episodeType }}</option>
