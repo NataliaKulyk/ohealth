@@ -400,6 +400,9 @@
                                                     @icon('user-check', 'w-5 h-5')
                                                 </button>
                                             @elseif(in_array(strtoupper($activityStatus), ['ACTIVE', 'SCHEDULED', 'IN-PROGRESS', 'IN_PROGRESS', 'ON-HOLD']))
+                                                <button type="button" class="text-green-500 hover:text-green-700 transition-colors" wire:click="openSignatureModal('complete_activity', {{ $activity->id }})">
+                                                    @icon('check-circle', 'w-5 h-5')
+                                                </button>
                                                 <button type="button" class="text-red-500 hover:text-red-700 transition-colors" wire:click="openSignatureModal('cancel_activity', {{ $activity->id }})">
                                                     @icon('x-circle', 'w-5 h-5')
                                                 </button>
