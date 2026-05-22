@@ -122,6 +122,10 @@ input[required] ~ label:after {
     @apply p-4 sm:p-8 sm:pb-10 mb-16 border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 max-w-[1120px];
 }
 
+.fieldset-card {
+    @apply bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-none;
+}
+
 .fieldset-table {
     @apply pb-4 sm:pb-10 mb-16 relative overflow-x-auto
 }
@@ -351,13 +355,12 @@ input:-webkit-autofill ~ .label {
     @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300 p-4 rounded-lg flex items-center gap-2 text-sm font-medium;
 }
 
-
-.status-alert-cyan {
-    @apply bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300 p-4 rounded-lg flex items-center gap-2 text-sm font-medium;
-}
-
 .status-alert-red {
     @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 p-4 rounded-lg flex items-center gap-2 text-sm font-medium;
+}
+
+.status-info-cyan {
+    @apply bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300 p-4 rounded-lg flex items-center gap-2 text-sm font-medium;
 }
 
 .encounter-nav-item {

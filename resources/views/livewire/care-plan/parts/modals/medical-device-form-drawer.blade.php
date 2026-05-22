@@ -27,11 +27,7 @@
      tabindex="-1"
 >
     <h3 class="modal-header">
-        @if(isset($activityForm['id']) && $activityForm['id'])
-            {{ __('care-plan.edit_medical_device_prescription') }}
-        @else
-            {{ __('care-plan.new_medical_device_prescription') }}
-        @endif
+        {{ __('care-plan.new_medical_device_prescription') }}
     </h3>
 
     {{-- Content --}}

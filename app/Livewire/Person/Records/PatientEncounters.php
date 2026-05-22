@@ -29,6 +29,8 @@ class PatientEncounters extends BasePatientComponent
 
     public array $encounters = [];
 
+    public array $encounterIdMap = [];
+
     public array $episodes = [];
     public array $originEpisodes = [];
     public array $incomingReferrals = [];
@@ -91,6 +93,7 @@ class PatientEncounters extends BasePatientComponent
 
         $this->encounters = Arr::toCamelCase($this->formatDatesForDisplay($encountersModel->toArray()));
         $this->populateDbIds();
+        $this->encounterIdMap = $encountersModel->pluck('id', 'uuid')->toArray();
         $this->incomingReferrals = $encountersModel->pluck('incomingReferral')
             ->filter()
             ->map(fn (Identifier $referral) => [
@@ -100,6 +103,7 @@ class PatientEncounters extends BasePatientComponent
             ->unique('uuid')
             ->values()
             ->toArray();
+
         $this->originEpisodes = $encountersModel->pluck('originEpisode')
             ->filter()
             ->map(fn (Identifier $referral) => [

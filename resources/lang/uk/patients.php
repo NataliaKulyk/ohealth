@@ -191,7 +191,11 @@ return [
         'differential' => 'диференціальний',
         'provisional' => 'попередній',
         'refuted' => 'спростований',
-        'not_done' => 'Не виконана'
+        'not_done' => 'Не виконана',
+
+        // Statuses for reorganized declarations
+        'to_be_resigned' => 'Потребує переукладання',
+        'resigned' => 'Переукладена'
     ],
 
     'source' => [
@@ -265,9 +269,11 @@ return [
     'visual_studies' => 'Візуальні дослідження',
     'doctor_conclusion' => 'Заключення лікаря',
     'performed_status' => 'Виконано',
+    'observations_not_found' => 'Обстежень не знайдено',
 
     // Encounter
     'encounters' => 'Взаємодії',
+    'encounter' => 'Взаємодія',
     'main_data' => 'Основні дані',
     'reasons_for_visit' => 'Причини звернення',
     'prescriptions' => 'Рецепти',
@@ -276,15 +282,20 @@ return [
     'medical_reports' => 'Медичні висновки',
     'procedures' => 'Процедури',
     'care_plans' => 'Плани лікування',
+    'additional_actions' => 'Додаткові дії',
+    'add_prescription' => 'Додати рецепт',
+    'add_referral' => 'Додати направлення',
+    'add_medical_report' => 'Додати медичний висновок',
+    'add_care_plan' => 'Додати план лікування',
+    'encounter_entered_in_error' => 'Взаємодія внесена помилково',
 
     // Main data
     'referral_available' => 'Є направлення',
-    'referral_number' => 'Номер направлення',
     'referral_type' => 'Тип направлення',
     'electronic_referral' => 'Електронне направлення',
     'paper_referral' => 'Паперове направлення',
+    'referral_number' => 'Номер направлення',
     'paper_referral_author' => 'Автор направлення',
-    'paper_referral_edrpou' => 'ЄДРПОУ закладу, що виписав паперове направлення',
     'paper_referral_edrpou_short' => 'ЄДРПОУ закладу',
     'paper_referral_institution_short' => 'Найменування закладу',
     'paper_referral_date' => 'Дата направлення',
@@ -317,9 +328,14 @@ return [
     'evidence' => 'Докази',
     'evidence_observations' => 'Спостереження',
     'severity' => 'Ступінь тяжкості',
+    'conditions_not_found' => 'Станів не знайдено',
+    'end_date' => 'Дата кінця',
+    'loading' => 'Завантаження...', 
+    'input_code_or_name' => 'Почніть вводити код або назву',
 
     // Additional data
     'additional_data' => 'Додаткові дані',
+    'assignments' => 'Призначення',
     'period_start' => 'Час початку',
     'period_end' => 'Час закінчення',
 
@@ -358,8 +374,8 @@ return [
     'diagnostic_report' => 'Діагностичний звіт',
     'conclusion_code' => 'Код заключення(за МКХ-10АМ)',
     'requisition_type' => 'Тип направлення',
-    'electronic' => 'Електронне',
-    'paper' => 'Паперове',
+    'electronic' => 'Електронне направлення',
+    'paper' => 'Паперове направлення',
     'edrpou_of_the_issuing_institution' => 'ЄДРПОУ закладу, що виписав',
     'name_of_the_institution_that_issued_it' => 'Найменування закладу, що виписав',
     'the_doctor_who_interpreted_the_results' => 'Лікар, що інтерпретував результати',
@@ -389,6 +405,9 @@ return [
     'observation_method' => 'Метод спостереження',
     'interpretation_of_observation' => 'Інтерпретація спостереження',
     'date_and_time_of_receiving_the_indicators' => 'Дата та час отримання показників',
+    'diagnostic_report_id' => 'ID діагностичного звіту',
+    'device_id' => 'ID девайсу',
+    'nothing_found' => 'Нічого не знайдено',
 
     // Procedures
     'procedure' => 'Процедура',
@@ -568,5 +587,9 @@ return [
         'care_plan_sync_resume_started' => 'Відновлення попередньої синхронізації планів лікування розпочато',
         'care_plan_sync_database_error' => 'Виникла помилка під час синхронізації планів лікування',
         'care_plan_sync_background_dispatch_error' => 'Помилка запуску фонової синхронізації планів лікування',
-    ]
+    ],
+    'add_coauthor' => 'Додати співавтора',
+    'find_doctor' => 'Знайти лікаря',
+    'coauthor' => 'Співавтор',
+
 ];
