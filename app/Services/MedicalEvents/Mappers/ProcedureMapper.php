@@ -147,7 +147,7 @@ class ProcedureMapper implements FhirMapperContract
             'uuid' => data_get($data, 'uuid'),
             'categoryCode' => data_get($data, 'category.coding.0.code', ''),
             'codeValue' => data_get($data, 'code.identifier.value', ''),
-            'primarySource' => data_get($data, 'primarySource', true),
+            'primarySource' => data_get($data, 'primarySource'),
             'reportOriginCode' => data_get($data, 'reportOrigin.coding.0.code', ''),
             'reportOriginText' => data_get($data, 'reportOrigin.text', ''),
             'divisionId' => data_get($data, 'division.identifier.value', ''),
@@ -178,7 +178,7 @@ class ProcedureMapper implements FhirMapperContract
                     return [
                         'id' => $uuid,
                         'type' => data_get($rr, 'identifier.type.coding.0.code'),
-                        'insertedAt' => $details['insertedAt'] ?? null,
+                        'ehealthInsertedAt' => $details['ehealthInsertedAt'] ?? null,
                         'codeCode' => $details['codeCode'] ?? null,
                     ];
                 })
@@ -195,7 +195,7 @@ class ProcedureMapper implements FhirMapperContract
 
                     return [
                         'id' => $uuid,
-                        'insertedAt' => $details['insertedAt'] ?? null,
+                        'ehealthInsertedAt' => $details['ehealthInsertedAt'] ?? null,
                         'codeCode' => $details['codeCode'] ?? null,
                     ];
                 })
