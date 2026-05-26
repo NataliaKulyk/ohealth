@@ -1,15 +1,63 @@
-
 <div class="relative"> {{-- This required for table overflow scrolling --}}
     <fieldset class="fieldset"
-              {{-- Binding evidence detail to Alpine, it will be re-used in the modal.
-                Note that it's necessary for modal to work properly --}}
               x-data="{
                   openModal: false,
-                  modalEvidenceDetail: new EvidenceDetail(),
-                  newEvidenceDetail: false,
-                  item: 0,
+                  selectedType: 'condition',
+                  searchQuery: '',
+                  isLoading: false,
                   searchResults: [],
-                  selectedEvidenceDetailIds: []
+
+                  init() {
+                      this.$watch('selectedType', () => this.fetchRecords());
+                      this.$watch('openModal', (val) => {
+                          if (val) {
+                              this.selectedType = 'condition';
+                              this.searchQuery = '';
+                              this.searchResults = [];
+                              this.fetchRecords();
+                          }
+                      });
+                  },
+                  fetchRecords() {
+                      if (!this.selectedType) {
+                          this.searchResults = [];
+                          return;
+                      }
+                      this.isLoading = true;
+                      $wire.searchConditionsOrObservations(this.selectedType)
+                          .then(() => {
+                              this.searchResults = JSON.parse(JSON.stringify($wire.evidenceDetails || []));
+                          })
+                          .finally(() => {
+                              this.isLoading = false;
+                          });
+                  },
+                  filteredRecords() {
+                      return this.searchResults.filter(rec => {
+                          const dictionaryName = this.selectedType === 'condition'
+                              ? 'eHealth/ICPC2/condition_codes'
+                              : 'eHealth/LOINC/observation_codes';
+                          const name = $wire.dictionaries[dictionaryName]?.[rec.codeCode] || '';
+                          const label = (rec.codeCode + ' ' + name).toLowerCase();
+                          if (this.searchQuery) {
+                              const query = this.searchQuery.toLowerCase();
+                              return label.includes(query);
+                          }
+                          return true;
+                      });
+                  },
+                  addEvidence(record) {
+                      const existingIds = modalCondition.evidenceDetails.map(detail => detail.id);
+                      if (!existingIds.includes(record.id)) {
+                          modalCondition.evidenceDetails.push({
+                              id: record.id,
+                              ehealthInsertedAt: record.ehealthInsertedAt,
+                              codeCode: record.codeCode,
+                              type: this.selectedType
+                          });
+                      }
+                      this.openModal = false;
+                  }
               }"
     >
         <legend class="legend">
@@ -78,227 +126,157 @@
                                           stroke-width="2"
                                           d="M7 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h1m4-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm7.441 1.559a1.907 1.907 0 0 1 0 2.698l-6.069 6.069L10 19l.674-3.372 6.07-6.07a1.907 1.907 0 0 1 2.697 0Z"/>
                                 </svg>
-                            </button>
+                              </button>
 
-                            {{-- Dropdown Panel --}}
-                            <div class="absolute" style="left: 50%"> {{-- Center a dropdown panel --}}
-                                <div x-ref="panel"
-                                     x-show="openDropdown"
-                                     x-transition.origin.top.left
-                                     @click.outside="close($refs.button)"
-                                     :id="$id('dropdown-button')"
-                                     x-cloak
-                                     class="dropdown-panel relative"
-                                     style="left: -50%" {{-- Center a dropdown panel --}}
-                                >
+                              {{-- Dropdown Panel --}}
+                              <div class="absolute" style="left: 50%"> {{-- Center a dropdown panel --}}
+                                  <div x-ref="panel"
+                                       x-show="openDropdown"
+                                       x-transition.origin.top.left
+                                       @click.outside="close($refs.button)"
+                                       :id="$id('dropdown-button')"
+                                       x-cloak
+                                       class="dropdown-panel relative"
+                                       style="left: -50%" {{-- Center a dropdown panel --}}
+                                  >
+                                      <button @click.prevent="modalCondition.evidenceDetails.splice(index, 1); close($refs.button);"
+                                              class="dropdown-button dropdown-delete"
+                                      >
+                                          {{ __('forms.delete') }}
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+                      </td>
+                  </tr>
+              </template>
+              </tbody>
+          </table>
 
-                                    <button @click="
-                                                openModal = true;
-                                                item = index;
-                                                modalEvidenceDetail = new EvidenceDetail(detail);
-                                                newEvidenceDetail = false;
-                                                searchResults = modalCondition.evidenceDetails;
-                                            "
-                                            @click.prevent
-                                            class="dropdown-button"
-                                    >
-                                        {{ __('forms.edit') }}
-                                    </button>
+          <div>
+              {{-- Button to trigger the drawer --}}
+              <button @click.prevent="openModal = true"
+                      class="item-add my-5"
+              >
+                  {{ __('forms.add') }}
+              </button>
 
-                                    <button @click.prevent="modalCondition.evidenceDetails.splice(index, 1); close($refs.button);"
-                                            class="dropdown-button dropdown-delete"
-                                    >
-                                        {{ __('forms.delete') }}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            </template>
-            </tbody>
-        </table>
+              {{-- Modal/Drawer --}}
+              <template x-teleport="body">
+                  <div x-show="openModal"
+                       x-transition:enter="transition ease-out duration-300"
+                       x-transition:enter-start="opacity-0"
+                       x-transition:enter-end="opacity-100"
+                       x-transition:leave="transition ease-in duration-200"
+                       x-transition:leave-start="opacity-100"
+                       x-transition:leave-end="opacity-0"
+                       x-cloak
+                       class="fixed inset-0"
+                       style="z-index: 46;"
+                       role="dialog"
+                       aria-modal="true"
+                  >
+                      <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm cursor-pointer"
+                           aria-hidden="true"
+                           @click="openModal = false"
+                      ></div>
 
-        <div>
-            {{-- Button to trigger the modal --}}
-            <button @click.prevent="
-                        openModal = true;
-                        newEvidenceDetail = true;
-                        modalEvidenceDetail = new EvidenceDetail();
-                        searchResults = [];
-                        selectedEvidenceDetailIds = [];
-                    "
-                    class="item-add my-5"
-            >
-                {{ __('forms.add') }}
-            </button>
+                      <div id="references-selection-drawer-right"
+                           x-show="openModal"
+                           x-transition:enter="transition ease-out duration-300"
+                           x-transition:enter-start="translate-x-full"
+                           x-transition:enter-end="translate-x-0"
+                           x-transition:leave="transition ease-in duration-200"
+                           x-transition:leave-start="translate-x-0"
+                           x-transition:leave-end="translate-x-full"
+                           class="absolute top-0 right-0 h-screen pt-20 p-6 bg-white dark:bg-gray-800 shadow-2xl flex flex-col justify-between border-l border-gray-100 dark:border-gray-700 overflow-y-auto"
+                           style="z-index: 47; width: calc(80% - 45px); max-width: 885px;"
+                           tabindex="-1"
+                      >
+                          <div class="flex-1 flex flex-col min-h-0">
+                              {{-- Title --}}
+                              <div class="mb-6">
+                                  <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+                                      {{ __('patients.add_observations_reports_conditions') }}
+                                  </h2>
+                              </div>
 
-            {{-- Modal --}}
-            <template x-teleport="body"> {{-- This moves the modal at the end of the body tag --}}
-                <div x-show="openModal"
-                     style="display: none"
-                     @keydown.escape.prevent.stop="openModal = false"
-                     role="dialog"
-                     aria-modal="true"
-                     x-id="['modal-title']"
-                     :aria-labelledby="$id('modal-title')" {{-- This associates the modal with unique ID --}}
-                     class="modal"
-                >
+                              {{-- Search and filters row --}}
+                              <div class="form-row-3 mb-6">
+                                  <div class="form-group group">
+                                      <div class="relative">
+                                          <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3">
+                                              @icon('search-outline', 'w-5 h-5 text-gray-400')
+                                          </div>
+                                          <input type="text"
+                                                 x-model="searchQuery"
+                                                 class="input with-leading-icon peer w-full"
+                                                 placeholder=" "
+                                                 id="drawerSearchQuery"
+                                          />
+                                          <label for="drawerSearchQuery" class="wrapped-label">
+                                              {{ __('forms.search') }}
+                                          </label>
+                                      </div>
+                                  </div>
 
-                    {{-- Overlay --}}
-                    <div x-show="openModal" x-transition.opacity class="fixed inset-0 bg-black/25"></div>
+                                  <div class="form-group group">
+                                      <select x-model="selectedType"
+                                              id="drawerSelectedType"
+                                              class="input-select peer w-full"
+                                      >
+                                          <option value="condition">{{ __('patients.condition_or_diagnosis') }}</option>
+                                          <option value="observation">{{ __('patients.medical_observation') }}</option>
+                                      </select>
+                                      <label for="drawerSelectedType" class="label">
+                                          {{ __('forms.type') }}
+                                      </label>
+                                  </div>
+                              </div>
 
-                    {{-- Panel --}}
-                    <div x-show="openModal"
-                         x-transition
-                         @click="openModal = false"
-                         class="relative flex min-h-screen items-center justify-center p-4"
-                    >
-                        <div @click.stop
-                             x-trap.noscroll.inert="openModal"
-                             class="modal-content h-fit w-full lg:max-w-4xl"
-                        >
-                            {{-- Title --}}
-                            <h3 class="modal-header" :id="$id('modal-title')">{{ __('forms.add') }}</h3>
+                              <div class="flex-1 overflow-y-auto min-h-0 mb-6 pr-1 relative">
+                                  <div x-show="isLoading" class="absolute inset-0 flex items-center justify-center bg-white/70 dark:bg-gray-800/70 z-10" x-cloak>
+                                      <x-forms.loading/>
+                                  </div>
 
-                            {{-- Content --}}
-                            <form>
-                                {{-- Episode info in which the search happens --}}
-                                <div class="form-row-modal">
-                                    <div class="form-group group">
-                                        <select id="evidenceType" class="input-modal peer" x-model="modalEvidenceDetail.type">
-                                            <option value="" selected>
-                                                {{ __('forms.select') }} {{ mb_strtolower(__('forms.type')) }}
-                                            </option>
-                                            <option value="condition">{{ __('patients.condition') }}</option>
-                                            <option value="observation">{{ __('patients.observation') }}</option>
-                                        </select>
-                                    </div>
+                                  <table class="table-input w-inherit">
+                                      <thead class="thead-input">
+                                          <tr>
+                                              <th scope="col" class="th-input">{{ __('forms.date') }}</th>
+                                              <th scope="col" class="th-input">{{ __('forms.type') }}</th>
+                                              <th scope="col" class="th-input">{{ __('patients.code_and_name') }}</th>
+                                              <th scope="col" class="th-input text-center">{{ __('forms.action') }}</th>
+                                          </tr>
+                                      </thead>
+                                      <tbody>
+                                          <template x-for="record in filteredRecords()" :key="record.id">
+                                              <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
+                                                  <td class="td-input text-[14px] text-gray-900 dark:text-gray-300" x-text="record.ehealthInsertedAt || ''"></td>
+                                                  <td class="td-input text-[14px] text-gray-900 dark:text-gray-300" x-text="selectedType === 'condition' ? '{{ __('patients.condition_or_diagnosis') }}' : '{{ __('patients.medical_observation') }}'"></td>
+                                                  <td class="td-input text-[14px] text-gray-900 dark:text-white" x-text="`${ record.codeCode } - ${
+                                                      $wire.dictionaries[selectedType === 'condition' ? 'eHealth/ICPC2/condition_codes' : 'eHealth/LOINC/observation_codes']?.[record.codeCode] || ''
+                                                  }`"></td>
+                                                  <td class="td-input text-center">
+                                                      <button type="button"
+                                                              @click="addEvidence(record)"
+                                                              class="inline-flex items-center justify-center text-gray-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400 font-medium text-sm transition-colors cursor-pointer"
+                                                      >
+                                                          @icon('plus', 'w-5 h-5')
+                                                      </button>
+                                                  </td>
+                                              </tr>
+                                          </template>
+                                      </tbody>
+                                  </table>
 
-                                    {{-- Search button --}}
-                                    <div>
-                                        <button @click.prevent="
-                                                $wire.searchConditionsOrObservations(modalEvidenceDetail.type).then(() => {
-                                                    searchResults = JSON.parse(JSON.stringify($wire.evidenceDetails));
-                                                    selectedEvidenceDetailIds = [];
-                                                })"
-                                        class="flex items-center gap-2 button-primary"
-                                                :disabled="!modalEvidenceDetail.type"
-                                        >
-                                            @icon('search', 'w-4 h-4')
-                                            <span>{{ __('patients.search') }}</span>
-                                        </button>
-                                    </div>
-
-                                    <x-forms.loading/>
-                                </div>
-
-                                {{-- A table that shows the results of the found data --}}
-                                <template x-if="searchResults.length > 0">
-                                    <div class="table-container">
-                                        <div class="overflow-visible">
-                                            <table class="table-base">
-                                                <thead class="table-header">
-                                                <tr>
-                                                    <th scope="col" class="th-input">{{ __('forms.date') }}</th>
-                                                    <th scope="col" class="th-input">
-                                                        {{ __('patients.code_and_name') }}
-                                                    </th>
-                                                    <th scope="col" class="th-input">{{ __('forms.action') }}</th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                <template x-for="condition in searchResults" :key="condition.id">
-                                                    <tr class="border-b dark:border-gray-700">
-                                                        <th scope="row" class="table-cell-primary">
-                                                            <div class="text-base"
-                                                                 x-text="condition.ehealthInsertedAt || ''"
-                                                            ></div>
-                                                        </th>
-                                                        <td class="td-input"
-                                                            x-text="`${ condition.codeCode } - ${
-                                                                $wire.dictionaries['eHealth/LOINC/observation_codes'][condition.codeCode] ||
-                                                                $wire.dictionaries['eHealth/ICF/classifiers'][condition.codeCode] ||
-                                                                $wire.dictionaries['eHealth/ICPC2/condition_codes'][condition.codeCode]
-                                                            }`"
-                                                        ></td>
-                                                        <td class="td-input">
-                                                            <button @click.prevent="
-                                                                        const id = condition.id;
-                                                                        const index = selectedEvidenceDetailIds.indexOf(id);
-
-                                                                        if (index === -1) {
-                                                                            selectedEvidenceDetailIds.push(id);
-                                                                        } else {
-                                                                            selectedEvidenceDetailIds.splice(index, 1);
-                                                                        }
-                                                                    "
-                                                                    class="button-primary w-28"
-                                                                    x-text="selectedEvidenceDetailIds.includes(condition.id)
-                                                                        ? '{{ __('patients.added') }}'
-                                                                        : '{{ __('forms.add') }}'"
-                                                            >
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                </template>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </template>
-
-                                <template x-if="searchResults.length <= 0">
-                                    <p class="default-p">{{ __('forms.nothing_found') }}</p>
-                                </template>
-
-                                {{-- Action buttons --}}
-                                <div class="mt-6 flex justify-between space-x-2">
-                                    <button @click.prevent
-                                            type="button"
-                                            @click="openModal = false"
-                                            class="button-minor"
-                                    >
-                                        {{ __('forms.cancel') }}
-                                    </button>
-
-                                    <button @click.prevent
-                                            @click="
-                                                const existingIds = modalCondition.evidenceDetails.map(detail => detail.id);
-
-                                                const newDetails = searchResults
-                                                    .filter(detail => selectedEvidenceDetailIds.includes(detail.id) && !existingIds.includes(detail.id));
-
-                                                modalCondition.evidenceDetails = modalCondition.evidenceDetails.concat(newDetails);
-
-                                                openModal = false;
-                                                searchResults = [];
-                                            "
-                                            class="button-primary"
-                                    >
-                                        {{ __('forms.save') }}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </div>
-    </fieldset>
-</div>
-
-<script>
-    /**
-     * Representation of the user's personal EvidenceDetail
-     */
-    class EvidenceDetail {
-        constructor(obj = null) {
-            this.type = '';
-
-            if (obj) {
-                Object.assign(this, JSON.parse(JSON.stringify(obj)));
-            }
-        }
-    }
-</script>
+                                  <div x-show="!isLoading && filteredRecords().length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400" x-cloak>
+                                      {{ __('forms.nothing_found') }}
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </template>
+          </div>
+      </fieldset>
+  </div>

@@ -37,12 +37,23 @@
                     </h2>
                 </div>
 
-                <div class="mb-6">
-                    <div class="flex items-center gap-2 pb-2.5">
-                        @icon('search-outline', 'w-5 h-5 text-gray-400')
-                        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ __('patients.search') }}</span>
+                <div class="form-row-3 mb-6">
+                    <div class="form-group group">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3">
+                                @icon('search-outline', 'w-5 h-5 text-gray-400')
+                            </div>
+                            <input type="text"
+                                   x-model="searchQuery"
+                                   class="input with-leading-icon peer w-full"
+                                   placeholder=" "
+                                   id="drawerSearchQuery"
+                            />
+                            <label for="drawerSearchQuery" class="wrapped-label">
+                                {{ __('forms.search') }}
+                            </label>
+                        </div>
                     </div>
-                </div>
 
                 <div class="mb-8">
                     <div class="form-group group">
