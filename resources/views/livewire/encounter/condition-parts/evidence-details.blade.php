@@ -1,7 +1,7 @@
 <div class="relative"> {{-- This required for table overflow scrolling --}}
     <fieldset class="fieldset"
               x-data="{
-                  openModal: false,
+                  openEvidenceDrawer: false,
                   selectedType: 'condition',
                   searchQuery: '',
                   isLoading: false,
@@ -9,7 +9,7 @@
 
                   init() {
                       this.$watch('selectedType', () => this.fetchRecords());
-                      this.$watch('openModal', (val) => {
+                      this.$watch('openEvidenceDrawer', (val) => {
                           if (val) {
                               this.selectedType = 'condition';
                               this.searchQuery = '';
@@ -56,7 +56,7 @@
                               type: this.selectedType
                           });
                       }
-                      this.openModal = false;
+                      this.openEvidenceDrawer = false;
                   }
               }"
     >
@@ -155,7 +155,7 @@
 
           <div>
               {{-- Button to trigger the drawer --}}
-              <button @click.prevent="openModal = true"
+              <button @click.prevent="openEvidenceDrawer = true"
                       class="item-add my-5"
               >
                   {{ __('forms.add') }}
@@ -163,119 +163,86 @@
 
               {{-- Modal/Drawer --}}
               <template x-teleport="body">
-                  <div x-show="openModal"
-                       x-transition:enter="transition ease-out duration-300"
-                       x-transition:enter-start="opacity-0"
-                       x-transition:enter-end="opacity-100"
-                       x-transition:leave="transition ease-in duration-200"
-                       x-transition:leave-start="opacity-100"
-                       x-transition:leave-end="opacity-0"
-                       x-cloak
-                       class="fixed inset-0"
-                       style="z-index: 46;"
-                       role="dialog"
-                       aria-modal="true"
-                  >
-                      <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm cursor-pointer"
-                           aria-hidden="true"
-                           @click="openModal = false"
-                      ></div>
+                  <x-dialog-drawer x-model="openEvidenceDrawer" maxWidth="4/5" wire:ignore>
+                      <x-slot name="title">
+                          {{ __('patients.add_observations_reports_conditions') }}
+                      </x-slot>
 
-                      <div id="references-selection-drawer-right"
-                           x-show="openModal"
-                           x-transition:enter="transition ease-out duration-300"
-                           x-transition:enter-start="translate-x-full"
-                           x-transition:enter-end="translate-x-0"
-                           x-transition:leave="transition ease-in duration-200"
-                           x-transition:leave-start="translate-x-0"
-                           x-transition:leave-end="translate-x-full"
-                           class="absolute top-0 right-0 h-screen pt-20 p-6 bg-white dark:bg-gray-800 shadow-2xl flex flex-col justify-between border-l border-gray-100 dark:border-gray-700 overflow-y-auto"
-                           style="z-index: 47; width: calc(80% - 45px); max-width: 885px;"
-                           tabindex="-1"
-                      >
-                          <div class="flex-1 flex flex-col min-h-0">
-                              {{-- Title --}}
-                              <div class="mb-6">
-                                  <h2 class="text-lg font-bold text-gray-900 dark:text-white">
-                                      {{ __('patients.add_observations_reports_conditions') }}
-                                  </h2>
-                              </div>
-
-                              {{-- Search and filters row --}}
-                              <div class="form-row-3 mb-6">
-                                  <div class="form-group group">
-                                      <div class="relative">
-                                          <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3">
-                                              @icon('search-outline', 'w-5 h-5 text-gray-400')
-                                          </div>
-                                          <input type="text"
-                                                 x-model="searchQuery"
-                                                 class="input with-leading-icon peer w-full"
-                                                 placeholder=" "
-                                                 id="drawerSearchQuery"
-                                          />
-                                          <label for="drawerSearchQuery" class="wrapped-label">
-                                              {{ __('forms.search') }}
-                                          </label>
+                      <x-slot name="content">
+                          {{-- Search and filters row --}}
+                          <div class="form-row-3 mb-6">
+                              <div class="form-group group">
+                                  <div class="relative">
+                                      <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3">
+                                          @icon('search-outline', 'w-5 h-5 text-gray-400')
                                       </div>
-                                  </div>
-
-                                  <div class="form-group group">
-                                      <select x-model="selectedType"
-                                              id="drawerSelectedType"
-                                              class="input-select peer w-full"
-                                      >
-                                          <option value="condition">{{ __('patients.condition_or_diagnosis') }}</option>
-                                          <option value="observation">{{ __('patients.evidence_observations') }}</option>
-                                      </select>
-                                      <label for="drawerSelectedType" class="label">
-                                          {{ __('forms.type') }}
+                                      <input type="text"
+                                             x-model="searchQuery"
+                                             class="input with-leading-icon peer w-full"
+                                             placeholder=" "
+                                             id="drawerSearchQuery"
+                                      />
+                                      <label for="drawerSearchQuery" class="wrapped-label">
+                                          {{ __('forms.search') }}
                                       </label>
                                   </div>
                               </div>
 
-                              <div class="flex-1 overflow-y-auto min-h-0 mb-6 pr-1 relative">
-                                  <div x-show="isLoading" class="absolute inset-0 flex items-center justify-center bg-white/70 dark:bg-gray-800/70 z-10" x-cloak>
-                                      <x-forms.loading/>
-                                  </div>
-
-                                  <table class="table-input w-inherit">
-                                      <thead class="thead-input">
-                                          <tr>
-                                              <th scope="col" class="th-input">{{ __('forms.date') }}</th>
-                                              <th scope="col" class="th-input">{{ __('forms.type') }}</th>
-                                              <th scope="col" class="th-input">{{ __('patients.code_and_name') }}</th>
-                                              <th scope="col" class="th-input text-center">{{ __('forms.action') }}</th>
-                                          </tr>
-                                      </thead>
-                                      <tbody>
-                                          <template x-for="record in filteredRecords()" :key="record.id">
-                                              <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
-                                                  <td class="td-input text-[14px] text-gray-900 dark:text-gray-300" x-text="record.ehealthInsertedAt || ''"></td>
-                                                  <td class="td-input text-[14px] text-gray-900 dark:text-gray-300" x-text="selectedType === 'condition' ? '{{ __('patients.condition_or_diagnosis') }}' : '{{ __('patients.evidence_observations') }}'"></td>
-                                                  <td class="td-input text-[14px] text-gray-900 dark:text-white" x-text="`${ record.codeCode } - ${
-                                                      $wire.dictionaries[selectedType === 'condition' ? 'eHealth/ICPC2/condition_codes' : 'eHealth/LOINC/observation_codes']?.[record.codeCode] || ''
-                                                  }`"></td>
-                                                  <td class="td-input text-center">
-                                                      <button type="button"
-                                                              @click="addEvidence(record)"
-                                                              class="inline-flex items-center justify-center text-gray-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400 font-medium text-sm transition-colors cursor-pointer"
-                                                      >
-                                                          @icon('plus', 'w-5 h-5')
-                                                      </button>
-                                                  </td>
-                                              </tr>
-                                          </template>
-                                      </tbody>
-                                  </table>
-
-                                  <div x-show="!isLoading && filteredRecords().length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400" x-cloak>
-                                      {{ __('forms.nothing_found') }}
-                                  </div>
+                              <div class="form-group group">
+                                  <select x-model="selectedType"
+                                          id="drawerSelectedType"
+                                          class="input-select peer w-full"
+                                  >
+                                      <option value="condition">{{ __('patients.condition_or_diagnosis') }}</option>
+                                      <option value="observation">{{ __('patients.evidence_observations') }}</option>
+                                  </select>
+                                  <label for="drawerSelectedType" class="label">
+                                      {{ __('forms.type') }}
+                                  </label>
                               </div>
                           </div>
-                      </div>
-                  </div>
+
+                          <div class="relative">
+                              <div x-show="isLoading" class="absolute inset-0 flex items-center justify-center bg-white/70 dark:bg-gray-800/70 z-10" x-cloak>
+                                  <x-forms.loading/>
+                              </div>
+
+                              <table class="table-input w-inherit">
+                                  <thead class="thead-input">
+                                      <tr>
+                                          <th scope="col" class="th-input">{{ __('forms.date') }}</th>
+                                          <th scope="col" class="th-input">{{ __('forms.type') }}</th>
+                                          <th scope="col" class="th-input">{{ __('patients.code_and_name') }}</th>
+                                          <th scope="col" class="th-input text-center">{{ __('forms.action') }}</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      <template x-for="record in filteredRecords()" :key="record.id">
+                                          <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
+                                              <td class="td-input text-[14px] text-gray-900 dark:text-gray-300" x-text="record.ehealthInsertedAt || ''"></td>
+                                              <td class="td-input text-[14px] text-gray-900 dark:text-gray-300" x-text="selectedType === 'condition' ? '{{ __('patients.condition_or_diagnosis') }}' : '{{ __('patients.evidence_observations') }}'"></td>
+                                              <td class="td-input text-[14px] text-gray-900 dark:text-white" x-text="`${ record.codeCode } - ${
+                                                  $wire.dictionaries[selectedType === 'condition' ? 'eHealth/ICPC2/condition_codes' : 'eHealth/LOINC/observation_codes']?.[record.codeCode] || ''
+                                              }`"></td>
+                                              <td class="td-input text-center">
+                                                  <button type="button"
+                                                          @click="addEvidence(record)"
+                                                          class="inline-flex items-center justify-center text-gray-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400 font-medium text-sm transition-colors cursor-pointer"
+                                                  >
+                                                      @icon('plus', 'w-5 h-5')
+                                                  </button>
+                                              </td>
+                                          </tr>
+                                      </template>
+                                  </tbody>
+                              </table>
+
+                              <div x-show="!isLoading && filteredRecords().length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400" x-cloak>
+                                  {{ __('forms.nothing_found') }}
+                              </div>
+                          </div>
+                      </x-slot>
+                  </x-dialog-drawer>
               </template>
           </div>
       </fieldset>

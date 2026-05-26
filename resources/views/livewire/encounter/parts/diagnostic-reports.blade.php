@@ -6,7 +6,8 @@
          newDiagnosticReport: false,
          item: 0,
          diagnosticReportCategoriesDictionary: $wire.dictionaries['eHealth/diagnostic_report_categories'],
-         servicesDictionary: $wire.dictionaries['custom/services']
+         servicesDictionary: $wire.dictionaries['custom/services'],
+         showDrawer: false
      }"
 >
     <h2 class="text-xl font-bold mb-6 text-gray-900 dark:text-white">
@@ -93,12 +94,7 @@
                                                 {{-- Replace the previous diagnosticReport with the current, don't assign object directly (modalDiagnosticReport = diagnosticReport) to avoid reactiveness --}}
                                                 modalDiagnosticReport = JSON.parse(JSON.stringify(diagnosticReports[index]));
                                                 newDiagnosticReport = false; {{-- This diagnosticReport is already created --}}
-
-                                                $nextTick(() => {
-                                                    const drawer = document.getElementById('diagnostic-report-drawer-right');
-                                                    drawer.classList.remove('translate-x-full'); {{-- Open manually --}}
-                                                    drawer.scrollTop = 0; {{-- Move scroll to the top --}}
-                                                });
+                                                showDrawer = true;
                                             "
                                     >
                                         {{ __('forms.edit') }}
@@ -122,63 +118,51 @@
         <button @click.prevent="
                     newDiagnosticReport = true; {{-- We are adding a new diagnostic report --}}
                     modalDiagnosticReport = new DiagnosticReport(); {{-- Replace the data of the previous diagnostic report with a new one--}}
-
-                    $nextTick(() => {
-                        const drawer = document.getElementById('diagnostic-report-drawer-right');
-                        drawer.scrollTop = 0; {{-- Move scroll to the top --}}
-                    });
+                    showDrawer = true;
                 "
                 class="item-add my-5"
-                data-drawer-target="diagnostic-report-drawer-right"
-                data-drawer-show="diagnostic-report-drawer-right"
-                data-drawer-placement="right"
-                data-drawer-body-scrolling="false"
-                aria-controls="diagnostic-report-drawer-right"
         >
             {{ __('forms.add') }}
         </button>
 
         {{-- Content --}}
-        <template x-teleport="body"> {{-- This moves the drawer at the end of the body tag --}}
-            <div id="diagnostic-report-drawer-right"
-                 class="fixed top-0 right-0 z-40 h-screen pt-20 p-4 overflow-y-auto transition-transform translate-x-full bg-white w-4/5 dark:bg-gray-800"
-                 tabindex="-1"
-                 aria-labelledby="drawer-right-label"
-                 wire:ignore {{-- To avoid hiding when searching for ICD-10 --}}
-            >
+        <template x-teleport="body">
+            <x-dialog-drawer x-model="showDrawer" maxWidth="4/5" wire:ignore>
+                <x-slot name="title">
+                    {{ __('patients.diagnostic_report') }}
+                </x-slot>
 
-                <h3 class="modal-header" :id="$id('modal-title')">{{ __('patients.diagnostic_report') }}</h3>
+                <x-slot name="content">
+                    <form class="space-y-6">
+                        @include('livewire.encounter.diagnostic-report-parts.main-information')
+                        @include('livewire.encounter.diagnostic-report-parts.additional-information', ['context' => 'diagnostic-report'])
+                    </form>
+                </x-slot>
 
-                <form>
-                    @include('livewire.encounter.diagnostic-report-parts.main-information')
-                    @include('livewire.encounter.diagnostic-report-parts.additional-information', ['context' => 'diagnostic-report'])
+                <x-slot name="footer">
+                    <button type="button"
+                            class="button-minor"
+                            @click="showDrawer = false"
+                    >
+                        {{ __('forms.cancel') }}
+                    </button>
 
-                    <div class="mt-6 flex justify-between space-x-2">
-                        <button type="button"
-                                class="button-minor"
-                                data-drawer-hide="diagnostic-report-drawer-right"
-                                aria-controls="diagnostic-report-drawer-right"
-                        >
-                            {{ __('forms.cancel') }}
-                        </button>
-
-                        <button @click.prevent="
-                                    newDiagnosticReport !== false
-                                        ? diagnosticReports.push(modalDiagnosticReport)
-                                        : diagnosticReports[item] = modalDiagnosticReport;
-                                "
-                                class="button-primary"
-                                data-drawer-hide="diagnostic-report-drawer-right"
-                                :disabled="!(
-                                    modalDiagnosticReport.categoryCode.trim() &&
-                                    modalDiagnosticReport.codeValue.trim()
-                                )"
-                        >
-                            {{ __('forms.save') }}
-                        </button>
-                    </div>
-                </form>
-            </div>
+                    <button @click.prevent="
+                                newDiagnosticReport !== false
+                                    ? diagnosticReports.push(modalDiagnosticReport)
+                                    : diagnosticReports[item] = modalDiagnosticReport;
+                                showDrawer = false;
+                            "
+                            class="button-primary"
+                            :disabled="!(
+                                modalDiagnosticReport.categoryCode.trim() &&
+                                modalDiagnosticReport.codeValue.trim()
+                            )"
+                    >
+                        {{ __('forms.save') }}
+                    </button>
+                </x-slot>
+            </x-dialog-drawer>
         </template>
 </div>
 

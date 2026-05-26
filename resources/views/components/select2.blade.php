@@ -194,6 +194,7 @@
                 if (!searchTerm) {
                     this.filteredOptions = [];
                     this.updatePaginatedOptions();
+                    this.optionsVisible = false;
                     return;
                 }
 
@@ -230,7 +231,11 @@
             },
 
             showOptions() {
-                this.optionsVisible = true;
+                if (this.search.trim() === '') {
+                    this.optionsVisible = false;
+                } else {
+                    this.optionsVisible = true;
+                }
             },
 
             hideOptions() {
