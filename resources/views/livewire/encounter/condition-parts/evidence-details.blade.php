@@ -226,7 +226,7 @@
                                               class="input-select peer w-full"
                                       >
                                           <option value="condition">{{ __('patients.condition_or_diagnosis') }}</option>
-                                          <option value="observation">{{ __('patients.medical_observation') }}</option>
+                                          <option value="observation">{{ __('patients.evidence_observations') }}</option>
                                       </select>
                                       <label for="drawerSelectedType" class="label">
                                           {{ __('forms.type') }}
@@ -252,7 +252,7 @@
                                           <template x-for="record in filteredRecords()" :key="record.id">
                                               <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
                                                   <td class="td-input text-[14px] text-gray-900 dark:text-gray-300" x-text="record.ehealthInsertedAt || ''"></td>
-                                                  <td class="td-input text-[14px] text-gray-900 dark:text-gray-300" x-text="selectedType === 'condition' ? '{{ __('patients.condition_or_diagnosis') }}' : '{{ __('patients.medical_observation') }}'"></td>
+                                                  <td class="td-input text-[14px] text-gray-900 dark:text-gray-300" x-text="selectedType === 'condition' ? '{{ __('patients.condition_or_diagnosis') }}' : '{{ __('patients.evidence_observations') }}'"></td>
                                                   <td class="td-input text-[14px] text-gray-900 dark:text-white" x-text="`${ record.codeCode } - ${
                                                       $wire.dictionaries[selectedType === 'condition' ? 'eHealth/ICPC2/condition_codes' : 'eHealth/LOINC/observation_codes']?.[record.codeCode] || ''
                                                   }`"></td>
