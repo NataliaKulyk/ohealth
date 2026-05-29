@@ -15,7 +15,66 @@
              conditionClinicalStatusesRolesDictionary: $wire.dictionaries['eHealth/condition_clinical_statuses'],
              conditionVerificationStatusesDictionary: $wire.dictionaries['eHealth/condition_verification_statuses'],
              icd10Descriptions: {},
+
+             openEvidenceDrawer: false,
+             evidenceSelectedType: 'condition',
+             evidenceSelectedEpisodeId: '',
+             evidenceIsLoading: false,
+             evidenceSearchResults: [],
+
+             fetchEvidenceRecords() {
+                 if (!this.evidenceSelectedType) {
+                     this.evidenceSearchResults = [];
+                     return;
+                 }
+                 this.evidenceIsLoading = true;
+                 $wire.searchConditionsOrObservations(this.evidenceSelectedType)
+                     .then(() => {
+                         this.evidenceSearchResults = JSON.parse(JSON.stringify($wire.evidenceDetails || []));
+                     })
+                     .finally(() => {
+                         this.evidenceIsLoading = false;
+                     });
+             },
+             filteredEvidenceRecords() {
+                 return this.evidenceSearchResults.filter(rec => {
+                     if (this.evidenceSelectedEpisodeId && rec.episodeId) {
+                         return rec.episodeId === this.evidenceSelectedEpisodeId;
+                     }
+                     return true;
+                 });
+             },
+             addEvidence(record) {
+                 if (this.modalCondition) {
+                     if (!this.modalCondition.evidenceDetails) {
+                         this.modalCondition.evidenceDetails = [];
+                     }
+                     const existingIds = this.modalCondition.evidenceDetails.map(detail => detail.id);
+                     if (!existingIds.includes(record.id)) {
+                         this.modalCondition.evidenceDetails = [
+                             ...this.modalCondition.evidenceDetails,
+                             {
+                                 id: record.id,
+                                 ehealthInsertedAt: record.ehealthInsertedAt,
+                                 codeCode: record.codeCode,
+                                 type: this.evidenceSelectedType
+                             }
+                         ];
+                     }
+                 }
+             },
+
              init() {
+                 this.$watch('evidenceSelectedType', () => this.fetchEvidenceRecords());
+                 this.$watch('openEvidenceDrawer', (val) => {
+                     if (val) {
+                         this.evidenceSelectedType = 'condition';
+                         this.evidenceSelectedEpisodeId = '';
+                         this.evidenceSearchResults = [];
+                         this.fetchEvidenceRecords();
+                     }
+                 });
+
                  const icd10Codes = this.conditions
                      .filter(condition => condition.codeSystem === 'eHealth/ICD10_AM/condition_codes' && condition.codeCode)
                      .map(condition => condition.codeCode);
@@ -287,7 +346,7 @@
 
                                 <div x-show="!modalCondition.codeSystem">
                                     <label class="text-xs text-gray-500 dark:text-gray-400 font-medium block mb-1">
-                                        {{ __('patients.status_code') }}<span class="text-red-600"> *</span>
+                                        {{ __('patients.code') }}<span class="text-red-600"> *</span>
                                     </label>
                                     <div class="relative">
                                         <input type="text" disabled class="input w-full opacity-50 cursor-not-allowed"
@@ -634,6 +693,7 @@
                                     @click="
                                         showPrimaryWarning = false;
                                         showDuplicateCodeWarning = false;
+                                        openEvidenceDrawer = false;
                                         openConditionDrawer = false;
                                     "
                                     class="button-minor"
@@ -678,6 +738,7 @@
 
                                         showPrimaryWarning = false;
                                         showDuplicateCodeWarning = false;
+                                        openEvidenceDrawer = false;
                                         openConditionDrawer = false;
                                     "
                                     class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 py-2.5 shadow-sm focus:ring-4 focus:ring-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -707,6 +768,118 @@
                     </form>
         </x-dialog-drawer>
     </div>
+
+    {{-- Evidence Search Drawer (Restored Essence) --}}
+    <x-dialog-drawer x-model="openEvidenceDrawer" maxWidth="3/5" backdropClickThrough="true" wire:ignore>
+        <x-slot name="title">
+            {{ __('patients.add_observations_reports_conditions') }}
+        </x-slot>
+
+        {{-- Section Title "Пошук" --}}
+        <div class="mb-4 flex items-center gap-1.5 font-bold text-gray-900 dark:text-gray-100 pl-1 mt-2">
+            @icon('search-outline', 'w-5 h-5 text-gray-800 dark:text-gray-200')
+            <span class="text-base">{{ __('care-plan.search') }}</span>
+        </div>
+
+        {{-- Filters (Type & Episode Select from mock) --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="form-group group">
+                <select x-model="evidenceSelectedType"
+                        id="evidenceDrawerSelectedType"
+                        class="input-select peer w-full"
+                >
+                    <option value="condition">{{ __('patients.condition_or_diagnosis') }}</option>
+                    <option value="observation">{{ __('patients.evidence_observations') }}</option>
+                </select>
+                <label for="evidenceDrawerSelectedType" class="label">
+                    {{ mb_ucfirst(__('patients.medical_records_type')) }}
+                </label>
+            </div>
+
+            <div class="form-group group">
+                <select x-model="evidenceSelectedEpisodeId"
+                        id="evidenceDrawerSelectedEpisode"
+                        class="input-select peer w-full"
+                >
+                    <option value="">{{ __('forms.select') }} {{ mb_strtolower(__('patients.episode')) }}</option>
+                    @foreach($episodes as $key => $episode)
+                        <option value="{{ $episode['uuid'] }}">
+                            {{ $episode['name'] }}
+                            ({{ mb_strtolower(__('patients.status.' . $episode['status'])) }})
+                            від {{ \Carbon\CarbonImmutable::parse($episode['ehealthInsertedAt'] ?? $episode['insertedAt'] ?? $episode['createdAt'] ?? now())->format('j.m.Y') }}
+                        </option>
+                    @endforeach
+                </select>
+                <label for="evidenceDrawerSelectedEpisode" class="label">
+                    {{ mb_ucfirst(__('patients.episode')) }}
+                </label>
+            </div>
+        </div>
+
+
+
+        <div class="relative">
+            <div x-show="evidenceIsLoading"
+                 class="absolute inset-0 flex items-center justify-center bg-white/70 dark:bg-gray-800/70 z-10"
+                 x-cloak>
+                <x-forms.loading/>
+            </div>
+
+            <table class="table-input w-inherit">
+                <thead class="thead-input">
+                <tr>
+                    <th scope="col" class="th-input">{{ __('forms.date') }}</th>
+                    <th scope="col" class="th-input">{{ __('forms.type') }}</th>
+                    <th scope="col" class="th-input">{{ __('patients.code_and_name') }}</th>
+                    <th scope="col" class="th-input text-center">{{ __('forms.action') }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                <template x-for="record in filteredEvidenceRecords()" :key="record.id">
+                    <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
+                        <td class="td-input text-[14px] text-gray-900 dark:text-gray-300"
+                            x-text="record.ehealthInsertedAt || ''"></td>
+                        <td class="td-input text-[14px] text-gray-900 dark:text-gray-300"
+                            x-text="evidenceSelectedType === 'condition' ? '{{ __('patients.condition_or_diagnosis') }}' : '{{ __('patients.evidence_observations') }}'"></td>
+                        <td class="td-input text-[14px] text-gray-900 dark:text-white" x-text="`${ record.codeCode } - ${
+                                  $wire.dictionaries[evidenceSelectedType === 'condition' ? 'eHealth/ICPC2/condition_codes' : 'eHealth/LOINC/observation_codes']?.[record.codeCode] || ''
+                              }`"></td>
+                        <td class="td-input text-center">
+                            <template x-if="!modalCondition.evidenceDetails.some(d => d.id === record.id)">
+                                <button type="button"
+                                        @click="addEvidence(record)"
+                                        class="inline-flex items-center justify-center text-gray-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400 font-medium text-sm transition-colors cursor-pointer"
+                                >
+                                    @icon('plus', 'w-5 h-5')
+                                </button>
+                            </template>
+                            <template x-if="modalCondition.evidenceDetails.some(d => d.id === record.id)">
+                                <span class="inline-flex items-center text-green-600 dark:text-green-400 font-medium text-sm">
+                                    @icon('check-circle', 'w-5 h-5')
+                                    {{ __('patients.added') }}
+                                </span>
+                            </template>
+                        </td>
+                    </tr>
+                </template>
+                </tbody>
+            </table>
+
+            <div x-show="!evidenceIsLoading && filteredEvidenceRecords().length === 0"
+                 class="text-center py-8 text-gray-500 dark:text-gray-400" x-cloak>
+                {{ __('forms.nothing_found') }}
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-between space-x-2">
+            <button type="button"
+                    @click="openEvidenceDrawer = false"
+                    class="button-minor"
+            >
+                {{ __('forms.close') }}
+            </button>
+        </div>
+    </x-dialog-drawer>
 </div>
 
 <script>

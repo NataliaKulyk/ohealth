@@ -1,4 +1,4 @@
-@props(['maxWidth' => null])
+@props(['maxWidth' => null, 'noBackdrop' => false, 'backdropClickThrough' => false])
 
 @php
     $maxWidth = [
@@ -9,6 +9,7 @@
         '2xl' => 'w-full sm:w-[40rem]',
         '3xl' => 'w-full sm:w-[48rem]',
         '4/5' => 'w-full sm:w-4/5',
+        '3/5' => 'w-full sm:w-[68%]',
     ][$maxWidth ?? '4/5'];
 @endphp
 
@@ -16,14 +17,16 @@
     <div
         x-dialog
         x-cloak
-        class="fixed inset-0 overflow-hidden z-40"
+        class="fixed inset-0 overflow-hidden z-40 {{ $backdropClickThrough ? 'pointer-events-none' : '' }}"
         {{ $attributes }}
     >
         <!-- Overlay backdrop -->
-        <div x-dialog:overlay x-transition.opacity class="fixed inset-0 bg-black/25"></div>
+        @if(!$noBackdrop)
+            <div x-dialog:overlay x-transition.opacity class="fixed inset-0 bg-black/25 {{ $backdropClickThrough ? 'pointer-events-none' : '' }}"></div>
+        @endif
 
         <!-- Panel Container -->
-        <div class="fixed inset-y-0 right-0 max-h-screen min-h-screen flex {{ $maxWidth }}">
+        <div class="fixed inset-y-0 right-0 max-h-screen min-h-screen flex {{ $maxWidth }} pointer-events-auto">
             <div
                 x-dialog:panel
                 x-transition:enter="transition ease-out duration-300 transform"
