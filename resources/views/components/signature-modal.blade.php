@@ -21,7 +21,7 @@
 
                 {{-- Content --}}
                 <div class="p-6">
-                    <form>
+                    <form wire:submit.prevent="{{ $method }}">
                         <div class="flex flex-col gap-6">
                             @if(method_exists($this, 'getStatusReasonsProperty') && isset($this->actionType) && in_array($this->actionType, ['cancel', 'revoke', 'complete', 'cancel_activity', 'complete_activity']))
                                 <div>
