@@ -743,7 +743,7 @@ class CarePlanShow extends Component
             // Job Polling
             if (isset($responseData['links'][0]['href']) && str_contains($responseData['links'][0]['href'], '/jobs/')) {
                 $jobId = str_replace('/jobs/', '', $responseData['links'][0]['href']);
-                $jobApi = new \App\Classes\eHealth\Api\Job();
+                $jobApi = app(\App\Classes\eHealth\Api\Job::class);
                 $attempts = 0;
                 do {
                     sleep(2);
@@ -1145,7 +1145,7 @@ class CarePlanShow extends Component
             if (isset($responseData['links'][0]['href']) && str_contains($responseData['links'][0]['href'], '/jobs/')) {
                 $jobId = str_replace('/jobs/', '', $responseData['links'][0]['href']);
                 Log::info('CarePlanActivityStatus: Polling job: ' . $jobId);
-                $jobApi = new \App\Classes\eHealth\Api\Job();
+                $jobApi = app(\App\Classes\eHealth\Api\Job::class);
                 $attempts = 0;
                 do {
                     sleep(2);
