@@ -681,17 +681,17 @@
                                 <input type="checkbox" class="default-checkbox w-5 h-5">
                             </div>
 
-                            <div class="record-inner-column !pl-4 flex-1">
+                            <div class="record-inner-column flex-1">
                                 <div class="record-inner-label">{{ __('patients.code_and_name') }}</div>
                                 <div
-                                    class="record-inner-value text-[17px] font-semibold text-gray-900 dark:text-gray-100">
+                                    class="record-inner-value text-[16px]">
                                     {{ data_get($diagnosticReport, 'code.identifier.value') && data_get($diagnosticReport, 'code.displayValue')
                                     ? data_get($diagnosticReport, 'code.identifier.value') . ' | ' . data_get($diagnosticReport, 'code.displayValue')
                                     : '-' }}
                                 </div>
                             </div>
 
-                            <div class="record-inner-column-bordered w-full md:w-[180px] shrink-0">
+                            <div class="record-inner-column-bordered w-full md:w-36 shrink-0">
                                 <div class="record-inner-label">{{ __('forms.status.label') }}</div>
                                 <div>
                                     <span class="badge-green">
@@ -700,8 +700,7 @@
                                 </div>
                             </div>
 
-                            <div
-                                class="record-inner-action-col border-l border-gray-200 dark:border-gray-700 w-16 flex items-center justify-center shrink-0 h-full relative">
+                            <div class="record-inner-action-col">
                                 <div x-data="{
                                     open: false,
                                     toggle() {
@@ -725,9 +724,9 @@
                                             :aria-expanded="open"
                                             :aria-controls="$id('dropdown-button')"
                                             type="button"
-                                            class="record-inner-action-btn transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 p-2 rounded-lg"
+                                            class="record-inner-action-btn"
                                     >
-                                        @icon('edit-user-outline', 'w-6 h-6 text-gray-700 dark:text-gray-300')
+                                        @icon('edit-user-outline', 'w-5 h-5')
                                     </button>
 
                                     <div x-show="open"

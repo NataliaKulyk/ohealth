@@ -524,85 +524,86 @@
                                 <input type="checkbox" class="default-checkbox w-5 h-5">
                             </div>
 
-                            <div class="record-inner-label">{{ __('patients.code_and_name') }}</div>
-                            <div class="record-inner-value text-[16px]">
-                                {{
-                                    data_get($condition, 'code.coding.0.code') ?? '-'
-                                }} - {{
-                                        data_get( $this->dictionaries, 'eHealth/ICPC2/condition_codes.' . data_get($condition, 'code.coding.0.code') ?? '-')
-                                    }}
+                            <div class="record-inner-column flex-1">
+                                <div class="record-inner-label">{{ __('patients.code_and_name') }}</div>
+                                <div class="record-inner-value text-[16px]">
+                                    {{
+                                        data_get($condition, 'code.coding.0.code') ?? '-'
+                                    }} - {{
+                                            data_get( $this->dictionaries, 'eHealth/ICPC2/condition_codes.' . data_get($condition, 'code.coding.0.code') ?? '-')
+                                        }}
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="record-inner-column-bordered w-full md:w-36 shrink-0">
-                            <div class="record-inner-label">{{ __('patients.status_clinical') }}</div>
-                            <div>
-                                    <span class="badge-green">
-                                        {{ data_get(
-                                            $this->dictionaries,
-                                            'eHealth/condition_clinical_statuses.' . data_get($condition, 'clinicalStatus'),
-                                            data_get($condition, 'clinicalStatus', '-')
-                                        )}}
-                                    </span>
+                            <div class="record-inner-column-bordered w-full md:w-36 shrink-0">
+                                <div class="record-inner-label">{{ __('patients.status_clinical') }}</div>
+                                <div>
+                                        <span class="badge-green">
+                                            {{ data_get(
+                                                $this->dictionaries,
+                                                'eHealth/condition_clinical_statuses.' . data_get($condition, 'clinicalStatus'),
+                                                data_get($condition, 'clinicalStatus', '-')
+                                            )}}
+                                        </span>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="record-inner-action-col">
-                            <div x-data="{
-                                    open: false,
-                                    toggle() {
-                                        if (this.open) { return this.close(); }
-                                        this.$refs.button.focus();
-                                        this.open = true;
-                                    },
-                                    close(focusAfter) {
-                                        if (!this.open) return;
-                                        this.open = false;
-                                        focusAfter && focusAfter.focus()
-                                    }
-                                }"
-                                 @keydown.escape.prevent.stop="close($refs.button)"
-                                 @focusin.window="!$refs.panel.contains($event.target) && close()"
-                                 x-id="['dropdown-button']"
-                                 class="relative"
-                            >
-                                <button @click="toggle()"
-                                        x-ref="button"
-                                        :aria-expanded="open"
-                                        :aria-controls="$id('dropdown-button')"
-                                        type="button"
-                                        class="record-inner-action-btn transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 p-2 rounded-lg"
+                            <div class="record-inner-action-col">
+                                <div x-data="{
+                                        open: false,
+                                        toggle() {
+                                            if (this.open) { return this.close(); }
+                                            this.$refs.button.focus();
+                                            this.open = true;
+                                        },
+                                        close(focusAfter) {
+                                            if (!this.open) return;
+                                            this.open = false;
+                                            focusAfter && focusAfter.focus()
+                                        }
+                                    }"
+                                     @keydown.escape.prevent.stop="close($refs.button)"
+                                     @focusin.window="!$refs.panel.contains($event.target) && close()"
+                                     x-id="['dropdown-button']"
+                                     class="relative"
                                 >
-                                    @icon('edit-user-outline', 'w-6 h-6 text-gray-700 dark:text-gray-300')
-                                </button>
-
-                                <div x-show="open"
-                                     x-cloak
-                                     x-ref="panel"
-                                     x-transition.origin.top.right
-                                     @click.outside="close($refs.button)"
-                                     :id="$id('dropdown-button')"
-                                     class="absolute right-0 mt-2 w-56 rounded-md bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-lg z-50 py-1"
-                                >
-                                    <button @click="close($refs.button)"
-                                            class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                                    <button @click="toggle()"
+                                            x-ref="button"
+                                            :aria-expanded="open"
+                                            :aria-controls="$id('dropdown-button')"
+                                            type="button"
+                                            class="record-inner-action-btn transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50 p-2 rounded-lg"
                                     >
-                                        @icon('eye', 'w-5 h-5 text-gray-500')
-                                        {{ __('patients.view_details') }}
+                                        @icon('edit-user-outline', 'w-6 h-6 text-gray-700 dark:text-gray-300')
                                     </button>
 
-                                    <button @click="close($refs.button)"
-                                            class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                                    <div x-show="open"
+                                         x-cloak
+                                         x-ref="panel"
+                                         x-transition.origin.top.right
+                                         @click.outside="close($refs.button)"
+                                         :id="$id('dropdown-button')"
+                                         class="absolute right-0 mt-2 w-56 rounded-md bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-lg z-50 py-1"
                                     >
-                                        @icon('alert-circle', 'w-5 h-5 text-gray-500')
-                                        {{ __('patients.status.entered_in_error') }}
-                                    </button>
+                                        <button @click="close($refs.button)"
+                                                class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                                        >
+                                            @icon('eye', 'w-5 h-5 text-gray-500')
+                                            {{ __('patients.view_details') }}
+                                        </button>
+
+                                        <button @click="close($refs.button)"
+                                                class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                                        >
+                                            @icon('alert-circle', 'w-5 h-5 text-gray-500')
+                                            {{ __('patients.status.entered_in_error') }}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="record-inner-body">
+                        <div class="record-inner-body">
                         <div class="record-inner-grid-container">
                             <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
                                 <div class="min-w-0">
