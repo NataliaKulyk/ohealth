@@ -563,9 +563,9 @@ abstract class DeclarationComponent extends Component
             return;
         }
 
-        if (!$this->isNeedToResign) {
-            $declarationRequest = DeclarationRequest::findOrFail($this->declarationRequestId);
+        $declarationRequest = DeclarationRequest::findOrFail($this->declarationRequestId);
 
+        if (!$this->isNeedToResign) {
             $oldDeclaration = Declaration::where('person_id', $declarationRequest->person_id)
                 ->where('division_id', $declarationRequest->division_id)
                 ->where('employee_id', $declarationRequest->employee_id)
