@@ -12,6 +12,7 @@ use App\Jobs\DiagnosticReportSync;
 use App\Traits\HandlesSyncBatch;
 use App\Models\LegalEntity;
 use App\Models\MedicalEvents\Sql\Episode;
+use App\Models\MedicalEvents\Sql\DiagnosticReport;
 use App\Enums\JobStatus;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Session;
@@ -172,7 +173,7 @@ class PatientDiagnosticReports extends BasePatientComponent
             Session::flash('success', __('patients.messages.diagnostic_reports_synced_successfully'));
         }
 
-        $this->diagnosticReports = Arr::toCamelCase($this->formatDatesForDisplay($validatedData));
+        $this->loadDiagnosticReportsFromDb();
 
         $this->loadEpisodes();
         $this->loadEncounters();
@@ -213,13 +214,22 @@ class PatientDiagnosticReports extends BasePatientComponent
 
     private function loadDiagnosticReportsFromDb(): void
     {
-        $diagnosticReports = Repository::diagnosticReport()->getByPersonId($this->personId);
+        $diagnosticReports = DiagnosticReport::withAllRelations()
+        ->where('person_id', $this->personId)
+        ->get();
 
-        $this->totalEntries = count($diagnosticReports);
+        $this->totalEntries = $diagnosticReports->count();
 
-        $this->diagnosticReports = Arr::toCamelCase(
-            $this->formatDatesForDisplay($diagnosticReports)
-        );
+        $this->diagnosticReports = $diagnosticReports
+            ->map(function (DiagnosticReport $diagnosticReport) {
+                $data = Arr::toCamelCase($diagnosticReport->toArray());
+                $data['id'] = $diagnosticReport->id;
+
+                return $data;
+            })
+            ->toArray();
+
+        $this->diagnosticReports = $this->formatDatesForDisplay($this->diagnosticReports);
     }
 
     private function loadEpisodes(): void

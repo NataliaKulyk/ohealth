@@ -440,10 +440,6 @@ return [
         'division.location.latitude' => 'Широта',
         'division.location.longitude' => 'Довгота',
 
-        // Diagnostic report
-        'diagnosticReport.categoryCode' => 'категорія діагностичного звіту',
-        'diagnosticReport.codeValue' => 'послуга',
-
         // Healthcare Service
         'category.coding.*.code' => 'категорія послуги',
         'type.coding.*.code' => 'тип медичної послуги',
@@ -692,6 +688,30 @@ return [
             'requiredIssuedDate' => __('Дата видачі є обов\'язковою до заповнення'),
             'requiredActiveFromDate' => __('Дата початку дії є обов\'язковою до заповнення'),
             'requiredIssuedBy' => __('Потрібно вказати орган, який видав документ'),
+        ],
+
+        'diagnosticReport' => [
+            'categoryCode' => 'категорія діагностичного звіту',
+            'codeValue' => 'послуга діагностичного звіту',
+            'primarySource' => 'первинне джерело діагностичного звіту',
+            'reportOriginCode' => 'посилання на джерело інформації діагностичного звіту',
+            'reportOriginText' => 'джерело інформації діагностичного звіту',
+            'paperReferralRequisition' => 'номер направлення діагностичного звіту',
+            'paperReferralRequesterEmployeeName' => 'автор направлення діагностичного звіту',
+            'paperReferralRequesterLegalEntityEdrpou' => 'ЄДРПОУ закладу, що виписав направлення діагностичного звіту',
+            'paperReferralRequesterLegalEntityName' => 'найменування закладу, що виписав направлення діагностичного звіту',
+            'paperReferralServiceRequestDate' => 'дата направлення діагностичного звіту',
+            'paperReferralNote' => 'нотатки направлення діагностичного звіту',
+            'conclusionCode' => 'код заключення за МКХ-10АМ діагностичного звіту',
+            'conclusion' => 'заключення діагностичного звіту',
+            'divisionId' => 'місце надання послуг діагностичного звіту',
+            'resultsInterpreterEmployeeId' => 'лікар, що інтерпретував результати діагностичного звіту',
+            'issuedDate' => 'дата внесення діагностичного звіту',
+            'issuedTime' => 'час внесення діагностичного звіту',
+            'effectivePeriodStartDate' => 'дата початку прийому діагностичного звіту',
+            'effectivePeriodStartTime' => 'час початку прийому діагностичного звіту',
+            'effectivePeriodEndDate' => 'дата завершення прийому діагностичного звіту',
+            'effectivePeriodEndTime' => 'час завершення прийому діагностичного звіту',
         ],
 
         'diagnosticReports.*' => [

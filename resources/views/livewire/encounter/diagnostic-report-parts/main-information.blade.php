@@ -241,7 +241,7 @@
                 selected: null,
                 results: $wire.entangle('results'),
                 showResults: false,
-                conclusionCodeLabel: '',               
+                conclusionCodeLabel: modalDiagnosticReport.conclusionCodeLabel || modalDiagnosticReport.conclusionCode || '',
              }"
              class="form-row-2 relative"
         >
@@ -285,6 +285,7 @@
                                     selected = result;
                                     conclusionCodeLabel = result.code + ' - ' + result.description;
                                     modalDiagnosticReport.conclusionCode = result.code;
+                                    modalDiagnosticReport.conclusionCodeLabel = conclusionCodeLabel;
                                     showResults = false;
                                 "
                             >

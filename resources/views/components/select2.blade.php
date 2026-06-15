@@ -124,17 +124,50 @@
                             ? `${rootPath}.categoryCode`
                             : `${rootPath}.category[0].coding[0].code`;
 
-                        this.$watch(categoryPath, (newCode) => {
-                            this.options = Object.entries(rawData)
-                                .filter(([_, service]) => service.category === newCode)
-                                .map(([_, service]) => ({
+                        const setServiceOptions = (categoryCode) => {
+                            const selectedCategory = categoryCode ?? '';
+
+                            this.options = Object.values(rawData)
+                                .filter((service) => {
+                                    if (!selectedCategory) {
+                                        return false;
+                                    }
+
+                                    return (service.category ?? '') === selectedCategory;
+                                })
+                                .map((service) => ({
                                     value: service.id,
                                     code: service.code,
                                     label: service.name,
-                                    searchText: `${service.name} ${service.code}`.toLowerCase()
+                                    searchText: `${service.name ?? ''} ${service.code ?? ''} ${service.id ?? ''}`.toLowerCase()
                                 }));
+
                             this.buildOptionsMap();
+
+                            const selectedOption = this.optionsMap.get(this.selected);
+
+                            if (selectedOption) {
+                                this.search = `[${selectedOption.code ?? selectedOption.value}] - ${selectedOption.label}`;
+                            } else if (this.selected) {
+                                this.search = '';
+                            }
+
                             this.filterOptions();
+                        };
+
+                        const currentCategoryCode = (isModalProcedure || isModalDiagnosticReport)
+                            ? this[rootPath]?.categoryCode
+                            : this[rootPath]?.category?.[0]?.coding?.[0]?.code;
+
+                        setServiceOptions(currentCategoryCode);
+
+                        this.$watch(categoryPath, (newCode, oldCode) => {
+                            setServiceOptions(newCode);
+
+                            if (oldCode !== undefined && newCode !== oldCode && !this.optionsMap.has(this.selected)) {
+                                this.selected = '';
+                                this.search = '';
+                            }
                         });
                     } else {
                         this.options = Object.entries(rawData).map(([value, label]) => this.makeOption(value, label));

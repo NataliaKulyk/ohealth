@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Livewire\DiagnosticReport\Forms;
 
-use App\Rules\InDictionary;
 use App\Core\BaseForm;
+use App\Rules\AfterOrEqualDateTime;
+use App\Rules\InDictionary;
+use App\Rules\PastDateTime;
+use Carbon\CarbonImmutable;
+use Closure;
 use Illuminate\Validation\Rule;
 
 class DiagnosticReportForm extends BaseForm
@@ -58,27 +62,67 @@ class DiagnosticReportForm extends BaseForm
                 'date',
             ],
             'diagnosticReport.paperReferralNote' => ['nullable', 'string', 'max:255'],
-            'diagnosticReport.effectivePeriodStartDate' => ['nullable', 'date', 'before_or_equal:now',],
-            'diagnosticReport.effectivePeriodStartTime' => ['nullable', 'date_format:H:i', 'before_or_equal:now'],
+            'diagnosticReport.effectivePeriodStartDate' => [
+                'nullable',
+                'date_format:' . config('app.date_format'),
+                'before_or_equal:today',
+            ],
+            'diagnosticReport.effectivePeriodStartTime' => [
+                'nullable',
+                'date_format:H:i',
+                new PastDateTime(data_get($this->diagnosticReport, 'effectivePeriodStartDate', '')),
+            ],
             'diagnosticReport.effectivePeriodEndDate' => [
                 'nullable',
-                'date',
+                'date_format:' . config('app.date_format'),
                 'before_or_equal:today',
-                'after_or_equal:diagnosticReport.effectivePeriodStartDate'
+                'after_or_equal:diagnosticReport.effectivePeriodStartDate',
             ],
             'diagnosticReport.effectivePeriodEndTime' => [
                 'nullable',
                 'date_format:H:i',
-                function ($attribute, $value, $fail) {
-                    $now = now()->format('H:i');
-                    if ($value > $now) {
-                        $fail('Час завершення прийому не може бути в майбутньому.');
+                new PastDateTime(data_get($this->diagnosticReport, 'effectivePeriodEndDate', '')),
+                new AfterOrEqualDateTime(
+                    data_get($this->diagnosticReport, 'effectivePeriodEndDate', ''),
+                    data_get($this->diagnosticReport, 'effectivePeriodStartDate', ''),
+                    data_get($this->diagnosticReport, 'effectivePeriodStartTime', '')
+                ),
+                function (string $attribute, mixed $value, Closure $fail) {
+                    $issuedDate = data_get($this->diagnosticReport, 'issuedDate');
+                    $issuedTime = data_get($this->diagnosticReport, 'issuedTime');
+                    $endDate = data_get($this->diagnosticReport, 'effectivePeriodEndDate');
+
+                    if (empty($issuedDate) || empty($issuedTime) || empty($endDate) || empty($value)) {
+                        return;
+                    }
+
+                    $end = CarbonImmutable::createFromFormat(
+                        config('app.date_format') . ' H:i',
+                        $endDate . ' ' . $value
+                    );
+
+                    $issued = CarbonImmutable::createFromFormat(
+                        config('app.date_format') . ' H:i',
+                        $issuedDate . ' ' . $issuedTime
+                    );
+
+                    if ($end->isAfter($issued)) {
+                        $fail(__('validation.before_or_equal', [
+                            'date' => __('validation.attributes.issued'),
+                        ]));
                     }
                 },
-                'after:diagnosticReport.effectivePeriodStartTime'
             ],
-            'diagnosticReport.issuedDate' => ['required', 'date', 'before_or_equal:now'],
-            'diagnosticReport.issuedTime' => ['required', 'date_format:H:i', 'before_or_equal:now'],
+            'diagnosticReport.issuedDate' => [
+                'required',
+                'date_format:' . config('app.date_format'),
+                'before_or_equal:today',
+            ],
+            'diagnosticReport.issuedTime' => [
+                'required',
+                'date_format:H:i',
+                new PastDateTime(data_get($this->diagnosticReport, 'issuedDate', '')),
+            ],
             'diagnosticReport.conclusionCode' => [
                 'nullable',
                 'string',

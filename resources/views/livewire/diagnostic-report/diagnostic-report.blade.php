@@ -7,7 +7,7 @@
 
     <form class="form"
           x-data="{
-              modalDiagnosticReport: Object.assign(new DiagnosticReport(), { primarySource: true }),
+              modalDiagnosticReport: Object.assign(new DiagnosticReport(), @js($this->form->diagnosticReport ?: ['primarySource' => true])),
               diagnosticReportCategoriesDictionary: $wire.dictionaries['eHealth/diagnostic_report_categories'],
               servicesDictionary: $wire.dictionaries['custom/services'],
               showSignatureModal: false
@@ -76,6 +76,7 @@
             this.paperReferralNote = '';
 
             this.conclusionCode = '';
+            this.conclusionCodeLabel = '';
             this.conclusion = '';
 
             this.primarySource = true;

@@ -7,6 +7,7 @@ use App\Livewire\Declaration\DeclarationCreate;
 use App\Livewire\Declaration\DeclarationEdit;
 use App\Livewire\Declaration\DeclarationView;
 use App\Livewire\DiagnosticReport\DiagnosticReportCreate;
+use App\Livewire\DiagnosticReport\DiagnosticReportEdit;
 use App\Livewire\Encounter\EncounterCreate;
 use App\Livewire\Encounter\EncounterEdit;
 use App\Livewire\Person\PersonCreate;
@@ -96,6 +97,10 @@ Route::prefix('persons')->group(static function () {
         Route::get('{personId}/diagnostic-report/create', DiagnosticReportCreate::class)
             ->can('create', DiagnosticReport::class)
             ->name('diagnostic-report.create');
+
+        Route::get('{personId}/diagnostic-report/{diagnosticReportId}', DiagnosticReportEdit::class)
+            ->name('diagnostic-report.edit')
+            ->whereNumber('diagnosticReportId');
 
         Route::get('{personId}/procedure/create', ProcedureCreate::class)
             ->can('create', Procedure::class)
