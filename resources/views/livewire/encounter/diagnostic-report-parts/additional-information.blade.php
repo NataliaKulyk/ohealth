@@ -1,3 +1,9 @@
+@php
+    $diagnosticReportErrorPath = $diagnosticReportErrorPath
+        ?? (($context ?? null) === 'diagnostic-report'
+            ? 'form.diagnosticReport'
+            : 'form.diagnosticReports.*');
+@endphp
 <fieldset class="fieldset">
     <legend class="legend">
         {{ __('forms.additional_info') }}
@@ -87,8 +93,8 @@
                     @endforeach
                 </select>
 
-                @error('form.diagnosticReports.*.divisionId')
-                <p class="text-error">{{ $message }}</p>
+                @error($diagnosticReportErrorPath . '.divisionId')
+                    <p class="text-error">{{ $message }}</p>
                 @enderror
             </div>
         </div>
@@ -112,8 +118,8 @@
                 @endforeach
             </select>
 
-            @error('form.diagnosticReports.*.resultsInterpreterEmployeeId')
-            <p class="text-error">{{ $message }}</p>
+            @error($diagnosticReportErrorPath . '.resultsInterpreterEmployeeId')
+                <p class="text-error">{{ $message }}</p>
             @enderror
         </div>
     </div>
@@ -155,8 +161,8 @@
                     {{ __('patients.date_time_entered') }}
                 </label>
 
-                @error('form.diagnosticReports.*.issuedDate')
-                <p class="text-error">{{ $message }}</p>
+                @error($diagnosticReportErrorPath . '.issuedDate')
+                    <p class="text-error">{{ $message }}</p>
                 @enderror
             </div>
         </div>
@@ -176,8 +182,8 @@
                 >
             </div>
 
-            @error('form.diagnosticReports.*.issuedTime')
-            <p class="text-error">{{ $message }}</p>
+            @error($diagnosticReportErrorPath . '.issuedTime')
+                <p class="text-error">{{ $message }}</p>
             @enderror
         </div>
     </div>
@@ -200,8 +206,8 @@
                     {{ __('patients.reception_start_date_and_time') }}
                 </label>
 
-                @error('form.diagnosticReports.*.effectivePeriodStartDate')
-                <p class="text-error">{{ $message }}</p>
+                @error($diagnosticReportErrorPath . '.effectivePeriodStartDate')
+                    <p class="text-error">{{ $message }}</p>
                 @enderror
             </div>
         </div>
@@ -221,8 +227,8 @@
                 >
             </div>
 
-            @error('form.diagnosticReports.*.effectivePeriodStartTime')
-            <p class="text-error">{{ $message }}</p>
+            @error($diagnosticReportErrorPath . '.effectivePeriodStartTime')
+                <p class="text-error">{{ $message }}</p>
             @enderror
         </div>
     </div>
@@ -245,8 +251,8 @@
                     {{ __('patients.reception_end_date_and_time') }}
                 </label>
 
-                @error('form.diagnosticReports.*.effectivePeriodEndDate')
-                <p class="text-error">{{ $message }}</p>
+                @error($diagnosticReportErrorPath . '.effectivePeriodEndDate')
+                    <p class="text-error">{{ $message }}</p>
                 @enderror
             </div>
         </div>
@@ -266,8 +272,8 @@
                 >
             </div>
 
-            @error('form.diagnosticReports.*.effectivePeriodEndTime')
-            <p class="text-error">{{ $message }}</p>
+            @error($diagnosticReportErrorPath . '.effectivePeriodEndTime')
+                <p class="text-error">{{ $message }}</p>
             @enderror
         </div>
     </div>

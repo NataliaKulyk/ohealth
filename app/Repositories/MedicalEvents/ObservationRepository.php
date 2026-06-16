@@ -7,6 +7,7 @@ namespace App\Repositories\MedicalEvents;
 use App\Classes\eHealth\Api\PatientApi;
 use App\Models\MedicalEvents\Sql\Observation;
 use App\Models\MedicalEvents\Sql\ObservationComponent;
+use App\Models\MedicalEvents\Sql\DiagnosticReport;
 use App\Models\MedicalEvents\Sql\Quantity;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -27,6 +28,22 @@ class ObservationRepository extends BaseRepository
         parent::__construct($model);
 
         $this->employeeUuid = Auth::user()?->getDiagnosticReportWriterEmployee()?->uuid;
+    }
+
+    public function getByDiagnosticReportId(string $diagnosticReportId): array
+    {
+        $diagnosticReportUuid = DiagnosticReport::query()
+            ->whereKey($diagnosticReportId)
+            ->value('uuid');
+
+        if (!$diagnosticReportUuid) {
+            return [];
+        }
+
+        return $this->model::withAllRelations()
+            ->whereHas('diagnosticReport', fn (Builder $query) => $query->where('value', $diagnosticReportUuid))
+            ->get()
+            ->toArray();
     }
 
     /**

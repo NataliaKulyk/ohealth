@@ -49,6 +49,16 @@ class DiagnosticReportRepository extends BaseRepository
             ?->fullName;
     }
 
+    private function getServiceDisplayValue(?string $serviceId): ?string
+    {
+        if (!$serviceId) {
+            return null;
+        }
+
+        return collect(dictionary()->services()->flattened()->toArray())
+            ->firstWhere('id', $serviceId)['name'] ?? null;
+    }
+
     /**
      * Store condition in DB.
      *
@@ -62,7 +72,12 @@ class DiagnosticReportRepository extends BaseRepository
         return DB::transaction(function () use ($data, $personId) {
             foreach ($data as $datum) {
                 $codeValue = $datum['code']['identifier']['value'];
-                $code = Repository::identifier()->store($codeValue);
+
+                $code = Repository::identifier()->store(
+                    $codeValue,
+                    $this->getServiceDisplayValue($codeValue)
+                );
+
                 Repository::codeableConcept()->attach($code, $datum['code']);
 
                 $recordedByValue = $datum['recordedBy']['identifier']['value'];
@@ -262,6 +277,8 @@ class DiagnosticReportRepository extends BaseRepository
                 $existing = $existingDiagnosticReports->get($data['uuid']);
 
                 $basedOn = $this->syncIdentifier($existing, $data['based_on'] ?? null, 'basedOn');
+                $codeValue = data_get($data, 'code.identifier.value');
+                $data['code']['display_value'] = data_get($data, 'code.display_value') ?: $this->getServiceDisplayValue($codeValue);
                 $code = $this->syncIdentifier($existing, $data['code'], 'code');
                 $encounter = $this->syncIdentifier($existing, $data['encounter'] ?? null, 'encounter');
                 $division = $this->syncIdentifier($existing, $data['division'] ?? null, 'division');
@@ -270,6 +287,11 @@ class DiagnosticReportRepository extends BaseRepository
                     $data['conclusion_code'] ?? null,
                     'conclusionCode'
                 );
+                $recordedByData = $data['recorded_by'];
+                $recordedByValue = data_get($recordedByData, 'identifier.value');
+                $recordedByData['display_value'] = data_get($recordedByData, 'display_value') ?: $this->getEmployeeDisplayValue($recordedByValue);
+                $recordedByValue = data_get($data, 'recorded_by.identifier.value');
+                $data['recorded_by']['display_value'] = data_get($data, 'recorded_by.display_value') ?: $this->getEmployeeDisplayValue($recordedByValue);
                 $recordedBy = $this->syncIdentifier($existing, $data['recorded_by'], 'recordedBy');
                 $managingOrganization = $this->syncIdentifier(
                     $existing,
@@ -365,11 +387,20 @@ class DiagnosticReportRepository extends BaseRepository
         $text = $entityData['text'] ?? null;
 
         if (isset($entityData['reference'])) {
+            $referenceValue = data_get($entityData, 'reference.identifier.value');
+
+            $entityData['reference']['display_value'] = data_get($entityData, 'reference.display_value')
+                ?: $this->getEmployeeDisplayValue($referenceValue);
+
             if ($existing && $existing->reference) {
                 $this->updateIdentifier($existing->reference, $entityData['reference']);
                 $referenceId = $existing->reference->id;
             } else {
-                $reference = Repository::identifier()->store($entityData['reference']['identifier']['value']);
+                $reference = Repository::identifier()->store(
+                    $referenceValue,
+                    data_get($entityData, 'reference.display_value')
+                );
+
                 Repository::codeableConcept()->attach($reference, $entityData['reference']);
                 $referenceId = $reference->id;
             }

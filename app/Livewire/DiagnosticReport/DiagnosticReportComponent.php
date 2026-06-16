@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Livewire\DiagnosticReport;
 
 use App\Classes\Cipher\Traits\Cipher;
+use App\Enums\Person\DiagnosticReportStatus;
+use App\Services\MedicalEvents\Fhir;
 use App\Livewire\DiagnosticReport\Forms\DiagnosticReportForm as Form;
 use App\Models\Employee\Employee;
 use App\Models\Icd10;
@@ -15,6 +17,7 @@ use App\Repositories\Repository;
 use App\Traits\FormTrait;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -225,5 +228,37 @@ class DiagnosticReportComponent extends Component
                 $value[0] => $this->dictionaries[$value[0]] ?? []
             ])
             ->toArray();
+    }
+
+    /**
+     * Prepare formatted data.
+     *
+     * @param  array  $validatedData
+     * @param  DiagnosticReportStatus $status
+     * @param  string|null $diagnosticReportUuid
+     * @return array
+     */
+    protected function prepareFormattedData(array $validatedData, DiagnosticReportStatus $status, ?string $diagnosticReportUuid = null): array 
+    {
+        $uuids = [
+            'employee' => Auth::user()->getDiagnosticReportWriterEmployee()->uuid,
+            'diagnosticReport' => $diagnosticReportUuid ?? Str::uuid()->toString(),
+        ];
+
+        $diagnosticReport = Fhir::diagnosticReport()->toFhir(
+            $validatedData['diagnosticReport'],
+            $uuids,
+            $status
+        );
+
+        $observations = collect($validatedData['observations'] ?? [])
+            ->map(fn (array $observation) => Fhir::observation()->toFhir($observation, $uuids))
+            ->values()
+            ->toArray();
+
+        return [
+            'diagnosticReport' => $diagnosticReport,
+            'observations' => $observations,
+        ];
     }
 }
