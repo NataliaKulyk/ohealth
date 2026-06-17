@@ -22,8 +22,12 @@ class SignatureService
     }
 
     /**
-     * Sends data for signing using Cipher API.
-     * The file processing logic is now handled inside this service.
+     * Signs a JSON-serializable payload (first MSP signature on a contract request).
+     *
+     * Used when eHealth expects signed request data, e.g. approve_msp at status APPROVED.
+     * The payload is JSON-encoded and then base64-encoded inside {@see CipherApi::sendSession()}.
+     *
+     * @param  array<string, mixed>  $dataToSign
      */
     public function signData(
         array $dataToSign,
@@ -67,7 +71,13 @@ class SignatureService
     }
 
     /**
-     * Signs a payload that is already encoded in base64 (e.g. partially signed PKCS7 from eHealth).
+     * Co-signs a base64 PKCS7 payload that eHealth already partially signed (e.g. NHS side).
+     *
+     * Used for contract request sign_msp at status NHS_SIGNED: {@see ContractRequestShow}
+     * fetches content via getSignedContent() and appends the MSP signature without re-encoding.
+     * Do not use for approve_msp — use {@see signData()} instead.
+     *
+     * @param  string  $base64Payload  Partially signed content from eHealth (already base64).
      */
     public function signBase64Payload(
         string $base64Payload,

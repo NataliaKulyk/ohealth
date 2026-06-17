@@ -180,6 +180,12 @@ class ContractRequestShow extends Component
     }
 
     /**
+     * Builds signed content for sign_msp: co-sign NHS content when available, else sign JSON.
+     *
+     * At NHS_SIGNED, eHealth usually returns partially signed PKCS7 via getSignedContent().
+     * That blob must be co-signed with {@see SignatureService::signBase64Payload()}.
+     * If the endpoint is unavailable (404), falls back to signing fresh JSON from local data.
+     *
      * @param  array<string, mixed>  $validated
      */
     private function signPartiallySignedContent(array $validated, string $contractType): string
