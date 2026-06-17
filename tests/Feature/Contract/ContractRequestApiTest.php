@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\Contract;
 
 use App\Classes\eHealth\Api\ContractRequest;
+use App\Classes\eHealth\EHealthResponse;
+use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
@@ -24,14 +26,9 @@ class ContractRequestApiTest extends TestCase
 
     public function test_create_sends_put_request(): void
     {
-        Http::fake([
-            '*/api/contract_requests/reimbursement/*' => Http::response(
-                ['data' => $this->contractRequestData(), 'meta' => []],
-                201
-            ),
-        ]);
+        Http::fake(['*' => Http::response(['data' => $this->contractRequestData(), 'meta' => []], 201)]);
 
-        $api = app(ContractRequest::class);
+        $api = $this->makeApi();
         $api->create('some-uuid', 'reimbursement', ['signed_content' => 'base64data', 'signed_content_encoding' => 'base64']);
 
         Http::assertSent(static function (Request $request): bool {
@@ -42,14 +39,9 @@ class ContractRequestApiTest extends TestCase
 
     public function test_create_does_not_send_post_request(): void
     {
-        Http::fake([
-            '*/api/contract_requests/reimbursement/*' => Http::response(
-                ['data' => $this->contractRequestData(), 'meta' => []],
-                201
-            ),
-        ]);
+        Http::fake(['*' => Http::response(['data' => $this->contractRequestData(), 'meta' => []], 201)]);
 
-        $api = app(ContractRequest::class);
+        $api = $this->makeApi();
         $api->create('some-uuid', 'reimbursement', ['signed_content' => 'x', 'signed_content_encoding' => 'base64']);
 
         Http::assertNotSent(static function (Request $request): bool {
@@ -65,15 +57,15 @@ class ContractRequestApiTest extends TestCase
     public function test_get_many_does_not_throw_when_query_options_are_unset(): void
     {
         Http::fake([
-            '*/api/contract_requests*' => Http::response([
+            '*' => Http::response([
                 'data' => [],
                 'paging' => ['page_number' => 1, 'total_pages' => 1],
             ], 200),
         ]);
 
-        $api = app(ContractRequest::class);
+        $api = $this->makeApi();
 
-        // Should not throw TypeError from array_merge(null, [])
+        // Must not throw TypeError from array_merge(null, [])
         $this->expectNotToPerformAssertions();
         $api->getMany('reimbursement');
     }
@@ -81,13 +73,13 @@ class ContractRequestApiTest extends TestCase
     public function test_get_many_merges_query_params_correctly(): void
     {
         Http::fake([
-            '*/api/contract_requests*' => Http::response([
+            '*' => Http::response([
                 'data' => [],
                 'paging' => ['page_number' => 1, 'total_pages' => 1],
             ], 200),
         ]);
 
-        $api = app(ContractRequest::class);
+        $api = $this->makeApi();
         $api->getMany('reimbursement', ['contractor_legal_entity_id' => 'some-entity-uuid']);
 
         Http::assertSent(static function (Request $request): bool {
@@ -97,26 +89,18 @@ class ContractRequestApiTest extends TestCase
     }
 
     // -----------------------------------------------------------------------
-    // validateDetails() — must not require contractor_legal_entity for NEW
+    // validateDetails() — tested directly without making an HTTP call
     // -----------------------------------------------------------------------
 
     public function test_validate_details_succeeds_for_new_status_without_contractor_objects(): void
     {
-        Http::fake([
-            '*/api/contract_requests/reimbursement/*' => Http::response([
-                'data' => [
-                    'id' => 'c4f40d3a-1111-2222-3333-444455556666',
-                    'status' => 'NEW',
-                    // contractor_legal_entity and contractor_owner intentionally absent
-                ],
-                'meta' => [],
-            ], 200),
+        $api = new ContractRequest();
+        $response = $this->makeEHealthResponse($api, [
+            'id' => 'c4f40d3a-1111-2222-3333-444455556666',
+            'status' => 'NEW',
+            // contractor_legal_entity and contractor_owner intentionally absent
         ]);
 
-        $api = app(ContractRequest::class);
-        $response = $api->getDetails('reimbursement', 'c4f40d3a-1111-2222-3333-444455556666');
-
-        // validate() must not throw ValidationException for NEW status requests
         try {
             $validated = $response->validate();
             $this->assertSame('NEW', $validated['status']);
@@ -127,15 +111,8 @@ class ContractRequestApiTest extends TestCase
 
     public function test_validate_details_fails_when_uuid_is_missing(): void
     {
-        Http::fake([
-            '*/api/contract_requests/reimbursement/*' => Http::response([
-                'data' => ['status' => 'NEW'],
-                'meta' => [],
-            ], 200),
-        ]);
-
-        $api = app(ContractRequest::class);
-        $response = $api->getDetails('reimbursement', 'irrelevant');
+        $api = new ContractRequest();
+        $response = $this->makeEHealthResponse($api, ['status' => 'NEW']);
 
         $this->expectException(ValidationException::class);
         $response->validate();
@@ -143,29 +120,105 @@ class ContractRequestApiTest extends TestCase
 
     public function test_validate_details_returns_full_data_not_just_validated_subset(): void
     {
-        $extraField = 'some_extra_ehealth_field';
-        Http::fake([
-            '*/api/contract_requests/reimbursement/*' => Http::response([
-                'data' => [
-                    'id' => 'c4f40d3a-1111-2222-3333-444455556666',
-                    'status' => 'NEW',
-                    $extraField => 'extra_value',
-                ],
-                'meta' => [],
-            ], 200),
+        $api = new ContractRequest();
+        $response = $this->makeEHealthResponse($api, [
+            'id' => 'c4f40d3a-1111-2222-3333-444455556666',
+            'status' => 'NEW',
+            'some_extra_ehealth_field' => 'extra_value',
         ]);
 
-        $api = app(ContractRequest::class);
-        $response = $api->getDetails('reimbursement', 'c4f40d3a-1111-2222-3333-444455556666');
         $result = $response->validate();
 
-        // validateDetails() must return the full transformed data, not just validated fields
-        $this->assertArrayHasKey($extraField, $result, 'validateDetails() must not strip extra fields from the eHealth response');
+        $this->assertArrayHasKey('some_extra_ehealth_field', $result, 'validateDetails() must not strip extra fields from the eHealth response');
+    }
+
+    // -----------------------------------------------------------------------
+    // mapCreate() — pure PHP mapping logic
+    // -----------------------------------------------------------------------
+
+    public function test_map_create_maps_api_id_to_uuid_field(): void
+    {
+        $api = new ContractRequest();
+        $mapped = $api->mapCreate(['id' => 'c4f40d3a-1111-2222-3333-444455556666', 'status' => 'NEW']);
+
+        $this->assertSame('c4f40d3a-1111-2222-3333-444455556666', $mapped['uuid']);
+        $this->assertArrayNotHasKey('id', $mapped);
+    }
+
+    public function test_map_create_extracts_contractor_legal_entity_id_from_nested_object(): void
+    {
+        $api = new ContractRequest();
+        $mapped = $api->mapCreate([
+            'id' => 'uuid-1',
+            'status' => 'NEW',
+            'contractor_legal_entity' => ['id' => 'entity-uuid', 'name' => 'Test'],
+        ]);
+
+        $this->assertSame('entity-uuid', $mapped['contractor_legal_entity_id']);
+    }
+
+    public function test_map_create_extracts_nhs_signer_id_from_nested_object(): void
+    {
+        $api = new ContractRequest();
+        $mapped = $api->mapCreate([
+            'id' => 'uuid-1',
+            'status' => 'SIGNED',
+            'nhs_signer' => ['id' => 'nhs-uuid'],
+        ]);
+
+        $this->assertSame('nhs-uuid', $mapped['nhs_signer_id']);
+    }
+
+    public function test_map_create_preserves_full_data_field(): void
+    {
+        $api = new ContractRequest();
+        $mapped = $api->mapCreate(['id' => 'uuid-1', 'status' => 'NEW', 'extra_key' => 'extra_value']);
+
+        $this->assertIsArray($mapped['data']);
+        $this->assertSame('extra_value', $mapped['data']['extra_key']);
     }
 
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
+
+    /**
+     * Create a ContractRequest instance with Http::fake() stubs properly transferred.
+     *
+     * Http::fake() stores stubs on the Factory instance. When a PendingRequest subclass is
+     * instantiated directly (not through Factory::request()), the stubs are not copied.
+     * This helper transfers them via PendingRequest::stub().
+     */
+    private function makeApi(): ContractRequest
+    {
+        $factory = Http::getFacadeRoot();
+        $api = new ContractRequest($factory);
+
+        // Transfer the factory's protected $stubCallbacks to the PendingRequest instance.
+        $stubs = (function () { return $this->stubCallbacks; })->call($factory);
+        $api->stub($stubs);
+
+        return $api;
+    }
+
+    /**
+     * Build an EHealthResponse wired to ContractRequest::validateDetails() via reflection.
+     */
+    private function makeEHealthResponse(ContractRequest $api, array $data): EHealthResponse
+    {
+        $guzzleResponse = new GuzzleResponse(
+            200,
+            ['Content-Type' => 'application/json'],
+            json_encode(['data' => $data])
+        );
+
+        $reflector = new \ReflectionClass($api);
+        $method = $reflector->getMethod('validateDetails');
+        $method->setAccessible(true);
+        $validator = $method->getClosure($api);
+
+        return new EHealthResponse($guzzleResponse, $validator);
+    }
 
     private function contractRequestData(): array
     {

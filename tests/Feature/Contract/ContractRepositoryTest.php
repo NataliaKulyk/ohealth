@@ -12,13 +12,20 @@ use Tests\TestCase;
 
 /**
  * Tests for ContractRepository::saveFromEHealth().
- *
- * Covers: mapCreate() integration, uuid extraction, legal_entity_id binding,
- * contractor ID extraction from nested objects, data field persistence.
  */
 class ContractRepositoryTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function migrateFreshUsing(): array
+    {
+        return [
+            '--path' => [
+                'database/migrations/install',
+                'database/migrations/update/0_1',
+            ],
+        ];
+    }
 
     private ContractRepository $repository;
 
@@ -77,19 +84,25 @@ class ContractRepositoryTest extends TestCase
 
         $contract = $this->repository->saveFromEHealth($eHealthData);
 
-        $this->assertSame($contractorEntityId, $contract->contractor_legal_entity_id);
+        $this->assertDatabaseHas('contracts', [
+            'uuid' => $contract->uuid,
+            'contractor_legal_entity_id' => $contractorEntityId,
+        ]);
     }
 
     public function test_save_from_ehealth_falls_back_to_flat_contractor_legal_entity_id(): void
     {
         $contractorEntityId = (string) Str::uuid();
-        $eHealthData = array_merge($this->eHealthContractPayload(), [
-            'contractor_legal_entity_id' => $contractorEntityId,
-        ]);
+        $payload = $this->eHealthContractPayload();
+        unset($payload['contractor_legal_entity']);
+        $eHealthData = array_merge($payload, ['contractor_legal_entity_id' => $contractorEntityId]);
 
         $contract = $this->repository->saveFromEHealth($eHealthData);
 
-        $this->assertSame($contractorEntityId, $contract->contractor_legal_entity_id);
+        $this->assertDatabaseHas('contracts', [
+            'uuid' => $contract->uuid,
+            'contractor_legal_entity_id' => $contractorEntityId,
+        ]);
     }
 
     public function test_save_from_ehealth_extracts_contractor_owner_id_from_nested_object(): void
@@ -101,7 +114,10 @@ class ContractRepositoryTest extends TestCase
 
         $contract = $this->repository->saveFromEHealth($eHealthData);
 
-        $this->assertSame($ownerId, $contract->contractor_owner_id);
+        $this->assertDatabaseHas('contracts', [
+            'uuid' => $contract->uuid,
+            'contractor_owner_id' => $ownerId,
+        ]);
     }
 
     public function test_save_from_ehealth_persists_full_data_field(): void
@@ -161,6 +177,9 @@ class ContractRepositoryTest extends TestCase
             'contractor_divisions' => [],
             'external_contractor_flag' => false,
             'external_contractors' => [],
+            // eHealth always returns nested objects for these required fields
+            'contractor_legal_entity' => ['id' => (string) Str::uuid(), 'name' => 'Test Entity'],
+            'contractor_owner' => ['id' => (string) Str::uuid(), 'party' => []],
             'nhs_signer_id' => null,
             'nhs_legal_entity_id' => null,
             'nhs_signer_base' => null,
