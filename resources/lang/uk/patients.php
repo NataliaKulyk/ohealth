@@ -18,6 +18,7 @@ return [
     'patients' => 'Пацієнти',
     'patient_legal_representative' => 'Законний представник пацієнта',
     'add_patient' => 'Новий пацієнт',
+    'edit_data' => 'Редагувати дані',
     'start_interacting' => 'Розпочати взаємодію',
     'starts_interacting' => 'Нова взаємодія',
     'nobody_found' => 'Нікого не знайдено',
