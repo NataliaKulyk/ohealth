@@ -55,7 +55,11 @@
                          x-data="{
                              open: false,
                              selectedStatuses: $wire.entangle('statusFilter').live,
-                             statusLabels: @js(\App\Livewire\ContractRequest\ContractRequestIndex::STATUS_OPTIONS)
+                             statusLabels: {
+                                 @foreach(\App\Enums\Contract\Status::cases() as $statusCase)
+                                     '{{ $statusCase->value }}': '{{ $statusCase->label() }}',
+                                 @endforeach
+                             }
                          }"
                     >
                         <label for="statusFilter" class="label">{{ __('contracts.status_label') }}</label>
@@ -74,15 +78,15 @@
                                  class="absolute z-10 mt-2 w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg"
                             >
                                 <ul class="py-2 px-3 space-y-2 text-sm text-gray-700 dark:text-gray-200">
-                                     @foreach(\App\Livewire\ContractRequest\ContractRequestIndex::STATUS_OPTIONS as $value => $label)
+                                     @foreach(\App\Enums\Contract\Status::cases() as $statusCase)
                                          <li>
                                              <label class="flex items-center">
                                                  <input type="checkbox"
-                                                        value="{{ $value }}"
+                                                        value="{{ $statusCase->value }}"
                                                         x-model="selectedStatuses"
                                                         class="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-gray-600 border-gray-300 rounded focus:ring-blue-500"
                                                  >
-                                                 <span class="ml-2">{{ $label }}</span>
+                                                 <span class="ml-2">{{ $statusCase->label() }}</span>
                                              </label>
                                          </li>
                                      @endforeach
@@ -95,7 +99,11 @@
                          x-data="{
                              open: false,
                              selectedTypes: $wire.entangle('typeFilter').live,
-                             typeLabels: @js(\App\Livewire\ContractRequest\ContractRequestIndex::FILTER_OPTIONS)
+                             typeLabels: {
+                                 @foreach(\App\Enums\Contract\Type::cases() as $typeCase)
+                                     '{{ $typeCase->value }}': '{{ $typeCase->label() }}',
+                                 @endforeach
+                             }
                          }"
                     >
                         <label for="typeFilter" class="label">{{ __('contracts.type_label') }}</label>
@@ -114,15 +122,15 @@
                                  class="absolute z-10 mt-2 w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg"
                             >
                                 <ul class="py-2 px-3 space-y-2 text-sm text-gray-700 dark:text-gray-200">
-                                     @foreach(\App\Livewire\ContractRequest\ContractRequestIndex::FILTER_OPTIONS as $value => $label)
+                                     @foreach(\App\Enums\Contract\Type::cases() as $typeCase)
                                          <li>
                                              <label class="flex items-center">
                                                  <input type="checkbox"
-                                                        value="{{ $value }}"
+                                                        value="{{ $typeCase->value }}"
                                                         x-model="selectedTypes"
                                                         class="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-gray-600 border-gray-300 rounded focus:ring-blue-500"
                                                  >
-                                                 <span class="ml-2">{{ $label }}</span>
+                                                 <span class="ml-2">{{ $typeCase->label() }}</span>
                                              </label>
                                          </li>
                                      @endforeach
@@ -136,6 +144,9 @@
                     <button type="button" wire:click="search" class="flex items-center justify-center gap-2 button-primary w-full sm:w-auto">
                         @icon('search', 'w-4 h-4')
                         <span>{{ __('forms.search') }}</span>
+                    </button>
+                    <button type="button" wire:click="resetFilters" class="button-primary-outline-red w-full sm:w-auto">
+                        {{ __('forms.reset_all_filters') }}
                     </button>
                 </div>
             </div>

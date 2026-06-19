@@ -13,6 +13,8 @@ use App\Models\LegalEntity;
 use App\Notifications\SyncNotification;
 use App\Repositories\Repository;
 use App\Traits\BatchLegalEntityQueries;
+use App\Enums\Contract\Status;
+use App\Enums\Contract\Type;
 use Auth;
 use Illuminate\Bus\Batch;
 use Illuminate\Support\Facades\Bus;
@@ -30,45 +32,43 @@ class ContractRequestIndex extends Component
     public string $search = '';
     public array $statusFilter = [];
     public array $typeFilter = [];
-
-    public const array STATUS_OPTIONS = [
-        'DRAFT' => 'Чернетка',
-        'NEW' => 'Нова',
-        'IN_PROCESS' => 'Обробляється',
-        'APPROVED' => 'Підтверджена',
-        'PENDING_NHS_SIGN' => 'Очікує на підпис НСЗУ',
-        'NHS_SIGNED' => 'Підписана зі сторони НСЗУ',
-        'SIGNED' => 'Завершена',
-        'DECLINED' => 'Відмінена',
-    ];
-
-    public const array FILTER_OPTIONS = [
-        'general' => 'Загальний реімбурсаційний договір',
-        'insulin' => 'Інсулін безоплатний або з доплатою',
-        'diabetes' => 'Нецукровий діабет',
-        'affordable_medicines' => 'Доступні ліки',
-        'psychiatry_epilepsy' => 'Розлади поведінки і психіки та епілепсія',
-    ];
+    public bool $isFiltersApplied = false;
 
     public function mount(): void
     {
-        $this->statusFilter = array_keys(self::STATUS_OPTIONS);
-        $this->typeFilter = array_keys(self::FILTER_OPTIONS);
+        $this->statusFilter = array_column(Status::cases(), 'value');
+        $this->typeFilter = array_column(Type::cases(), 'value');
     }
 
     public function updatingSearch(): void
     {
         $this->resetPage();
+        $this->isFiltersApplied = true;
     }
 
-    public function searchAction(): void
+    public function updatedStatusFilter(): void
     {
         $this->resetPage();
+        $this->isFiltersApplied = true;
+    }
+
+    public function updatedTypeFilter(): void
+    {
+        $this->resetPage();
+        $this->isFiltersApplied = true;
     }
 
     public function search(): void
     {
         $this->resetPage();
+        $this->isFiltersApplied = true;
+    }
+
+    public function resetFilters(): void
+    {
+        $this->reset(['search', 'statusFilter', 'typeFilter', 'isFiltersApplied']);
+        $this->statusFilter = array_column(Status::cases(), 'value');
+        $this->typeFilter = array_column(Type::cases(), 'value');
     }
 
     /**
@@ -218,6 +218,12 @@ class ContractRequestIndex extends Component
     {
         $contracts = ContractRequest::query()
             ->where('contractor_legal_entity_id', legalEntity()->uuid)
+            ->when($this->statusFilter, function ($query) {
+                $query->whereIn('status', $this->statusFilter);
+            })
+            ->when($this->typeFilter, function ($query) {
+                $query->whereIn('type', $this->typeFilter);
+            })
             ->when($this->search, function ($query) {
                 $query->where('contract_number', 'like', '%' . $this->search . '%');
             })
