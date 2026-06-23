@@ -1,6 +1,5 @@
-@php
-    use App\Models\Contracts\Contract;
-@endphp
+@use('App\Models\Contracts\Contract')
+@use('App\Enums\Contract\Type')
 
 <div>
     <livewire:components.x-message :key="time()"/>
@@ -50,7 +49,7 @@
 
                 <x-forms.multiselect
                     bind="typeFilter"
-                    :options="collect(\App\Enums\Contract\Type::cases())->mapWithKeys(fn($case) => [$case->value => $case->label()])->toArray()"
+                    :options="Type::options()"
                     label="{{ __('contracts.type_label') }}"
                     placeholder="{{ __('forms.all') }}"
                     :live="true"

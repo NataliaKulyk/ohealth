@@ -1,6 +1,6 @@
-@php
-    use App\Models\Contracts\ContractRequest;
-@endphp
+@use('App\Models\Contracts\ContractRequest')
+@use('App\Enums\Contract\Status')
+@use('App\Enums\Contract\Type')
 
 <div>
     <livewire:components.x-message :key="time()"/>
@@ -53,7 +53,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <x-forms.multiselect
                         bind="statusFilter"
-                        :options="collect(\App\Enums\Contract\Status::cases())->mapWithKeys(fn($case) => [$case->value => $case->label()])->toArray()"
+                        :options="Status::options()"
                         label="{{ __('contracts.status_label') }}"
                         placeholder="{{ __('forms.all') }}"
                         :live="true"
@@ -61,7 +61,7 @@
 
                     <x-forms.multiselect
                         bind="typeFilter"
-                        :options="collect(\App\Enums\Contract\Type::cases())->mapWithKeys(fn($case) => [$case->value => $case->label()])->toArray()"
+                        :options="Type::options()"
                         label="{{ __('contracts.type_label') }}"
                         placeholder="{{ __('forms.all') }}"
                         :live="true"

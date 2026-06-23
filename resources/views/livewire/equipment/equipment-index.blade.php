@@ -1,8 +1,7 @@
-@php
-    use App\Enums\Equipment\{Status, AvailabilityStatus};
-    use App\Models\Equipment;
-    use App\Enums\JobStatus;
-@endphp
+@use('App\Enums\Equipment\Status')
+@use('App\Enums\Equipment\AvailabilityStatus')
+@use('App\Models\Equipment')
+@use('App\Enums\JobStatus')
 
 <div>
     <livewire:components.x-message :key="time()" />

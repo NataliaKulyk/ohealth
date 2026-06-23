@@ -1,12 +1,12 @@
+@use('App\Enums\Status')
+@use('App\Enums\User\Role')
+@use('App\Enums\JobStatus')
+@use('App\Models\Employee\Employee')
+@use('App\Models\Employee\EmployeeRequest')
+
 <div>
     <livewire:components.x-message :key="now()->timestamp"/>
     @php
-        use App\Enums\Status;
-        use App\Enums\User\Role;
-        use App\Enums\JobStatus;
-        use App\Models\Employee\Employee;
-        use App\Models\Employee\EmployeeRequest;
-
         $currentUser = auth()->user();
         // We cache the hospital ID so as not to call the legalEntity() function 100 times in a loop
         $currentLegalEntityId = legalEntity()->id;
