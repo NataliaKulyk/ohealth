@@ -43,6 +43,15 @@
             ];
 
             $patientName = $person->fullName;
+            if ($person->lastName === '-' || $person->lastName === '') {
+                $contact = is_array($person->emergencyContact) ? $person->emergencyContact : json_decode($person->emergencyContact ?? '', true);
+                if (!empty($contact['firstName']) && !empty($contact['lastName'])) {
+                    $patientName = trim(($contact['lastName'] ?? '') . ' ' . ($contact['firstName'] ?? '') . ' ' . ($contact['secondName'] ?? ''));
+                } else {
+                    $patientName = 'Неідентифікований пацієнт';
+                }
+            }
+
             $cleanTitle = trim(str_replace([' - ' . $patientName, $patientName . ' - '], '', $title ?? ''));
 
             if ($cleanTitle && $cleanTitle !== $patientName) {

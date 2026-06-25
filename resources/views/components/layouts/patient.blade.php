@@ -24,14 +24,22 @@
             @if(isset($headerActions))
                 {{ $headerActions }}
             @else
-                @can('create', Encounter::class)
-                    <a href="{{ route('encounter.create', [legalEntity(), 'personId' => $personId]) }}"
-                       class="flex items-center gap-2 button-primary px-5 py-2 text-sm shadow-sm"
+                <div class="flex items-center gap-3">
+                    @can('create', Encounter::class)
+                        <a href="{{ route('encounter.create', [legalEntity(), 'personId' => $personId]) }}"
+                           class="flex items-center gap-2 button-primary px-5 py-2 text-sm shadow-sm"
+                        >
+                            @icon('plus', 'w-4 h-4')
+                            {{ __('patients.starts_interacting') }}
+                        </a>
+                    @endcan
+                    <button type="button"
+                            class="button-sync flex items-center gap-2 whitespace-nowrap"
                     >
-                        @icon('plus', 'w-4 h-4')
-                        {{ __('patients.starts_interacting') }}
-                    </a>
-                @endcan
+                        @icon('refresh', 'w-4 h-4')
+                        <span>Синхронізувати дані з ЕСОЗ</span>
+                    </button>
+                </div>
             @endif
         @endif
 

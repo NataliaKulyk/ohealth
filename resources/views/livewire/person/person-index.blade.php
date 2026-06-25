@@ -44,7 +44,7 @@
         <div class="space-y-6 pl-3.5" wire:key="patients-{{ $paginatedPatients->total() }}">
             @forelse($paginatedPatients->items() as $patient)
                 <fieldset wire:key="patient-{{ $patient['id'] }}"
-                          class="shift-content p-4 sm:p-8 sm:pb-10 mb-16 mt-6 border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 max-w-[1280px]"
+                          class="shift-content p-4 sm:p-8 sm:pb-10 mb-16 mt-6 border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 max-w-6xl"
                 >
                     <legend class="legend">
                         {{ $patient['lastName'] }} {{ $patient['firstName'] }} {{ $patient['secondName'] ?? '' }}
@@ -190,35 +190,72 @@
                                                     </div>
                                                 @else
                                                     <div class="py-1">
-                                                        @can('create', DeclarationRequest::class)
-                                                            <a wire:click="redirectTo('{{ $patient['id'] }}', 'declaration.create')"
+                                                        @if(($patient['verificationStatus'] ?? null) === \App\Enums\Person\VerificationStatus::VERIFICATION_NEEDED->value)
+                                                            <a wire:click="redirectTo('{{ $patient['id'] }}', 'persons.patient-data')"
                                                                class="dropdown-button !flex items-center gap-2 px-4 py-2 text-sm border-b border-gray-100 dark:border-gray-600 w-full hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer text-left text-gray-700 dark:text-gray-200"
                                                                @click="openDropdown = false"
                                                             >
                                                                 @icon('file-text', 'w-4 h-4')
-                                                                {{ __('patients.sign_declaration') }}
+                                                                {{ __('patients.get_certificate') }}
                                                             </a>
-                                                        @endcan
-
-                                                        @can('create', DiagnosticReport::class)
-                                                            <a wire:click="redirectTo('{{ $patient['id'] }}', 'diagnostic-report.create')"
-                                                               class="dropdown-button !flex items-center gap-2 px-4 py-2 text-sm border-b border-gray-100 dark:border-gray-600 w-full hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer text-left text-gray-700 dark:text-gray-200"
+                                                            <a class="dropdown-button !flex items-center gap-2 px-4 py-2 text-sm border-b border-gray-100 dark:border-gray-600 w-full hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer text-left text-gray-700 dark:text-gray-200"
+                                                               @click="
+                                                                   openDropdown = false;
+                                                                   $dispatch('open-edit-patient', {
+                                                                       uuid: '{{ strtoupper($patient['uuid'] ?? '') }}',
+                                                                       firstName: '{{ addslashes($patient['firstName'] ?? '') }}',
+                                                                       lastName: '{{ addslashes($patient['lastName'] ?? '') }}',
+                                                                       secondName: '{{ addslashes($patient['secondName'] ?? '') }}',
+                                                                       gender: '{{ $patient['gender'] ?? 'MALE' }}',
+                                                                       birthDate: '{{ $patient['birthDate'] ?? '' }}',
+                                                                       contactFirstName: '',
+                                                                       contactLastName: '',
+                                                                       contactSecondName: '',
+                                                                       contactPhoneType: 'MOBILE',
+                                                                       contactPhone: '{{ addslashes($patient['phones'][0]['number'] ?? '') }}',
+                                                                   })
+                                                               "
+                                                            >
+                                                                @icon('edit', 'w-4 h-4')
+                                                                {{ __('patients.edit_data') }}
+                                                            </a>
+                                                            <a class="dropdown-button !flex items-center gap-2 px-4 py-2 text-sm w-full hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer text-left text-gray-700 dark:text-gray-200"
                                                                @click="openDropdown = false"
                                                             >
-                                                                @icon('activity', 'w-4 h-4')
-                                                                {{ __('patients.create_diagnostic_report') }}
+                                                                @icon('alert-circle', 'w-4 h-4')
+                                                                {{ __('patients.register_death') }}
                                                             </a>
-                                                        @endcan
+                                                        @else
+                                                            @can('create', DeclarationRequest::class)
+                                                                <a wire:click="redirectTo('{{ $patient['id'] }}', 'declaration.create')"
+                                                                   class="dropdown-button !flex items-center gap-2 px-4 py-2 text-sm border-b border-gray-100 dark:border-gray-600 w-full hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer text-left text-gray-700 dark:text-gray-200"
+                                                                   @click="openDropdown = false"
+                                                                >
+                                                                    @icon('file-text', 'w-4 h-4')
+                                                                    {{ __('patients.sign_declaration') }}
+                                                                </a>
+                                                            @endcan
 
-                                                        @can('create', Procedure::class)
-                                                            <a wire:click="redirectTo('{{ $patient['id'] }}', 'procedure.create')"
-                                                               class="dropdown-button !flex items-center gap-2 px-4 py-2 text-sm w-full hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer text-left text-gray-700 dark:text-gray-200"
-                                                               @click="openDropdown = false"
-                                                            >
-                                                                @icon('settings', 'w-4 h-4')
-                                                                {{ __('patients.create_procedure') }}
-                                                            </a>
-                                                        @endcan
+                                                            @can('create', DiagnosticReport::class)
+                                                                <a wire:click="redirectTo('{{ $patient['id'] }}', 'diagnostic-report.create')"
+                                                                   class="dropdown-button !flex items-center gap-2 px-4 py-2 text-sm border-b border-gray-100 dark:border-gray-600 w-full hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer text-left text-gray-700 dark:text-gray-200"
+                                                                   @click="openDropdown = false"
+                                                                >
+                                                                    @icon('activity', 'w-4 h-4')
+                                                                    {{ __('patients.create_diagnostic_report') }}
+                                                                </a>
+                                                            @endcan
+
+                                                            @can('create', Procedure::class)
+                                                                <a wire:click="redirectTo('{{ $patient['id'] }}', 'procedure.create')"
+                                                                   class="dropdown-button !flex items-center gap-2 px-4 py-2 text-sm w-full hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer text-left text-gray-700 dark:text-gray-200"
+                                                                   @click="openDropdown = false"
+                                                                >
+                                                                    @icon('settings', 'w-4 h-4')
+                                                                    {{ __('patients.create_procedure') }}
+                                                                </a>
+                                                            @endcan
+                                                        @endif
                                                     </div>
                                                 @endif
                                             </div>
@@ -236,6 +273,9 @@
                 </div>
             @endforelse
         </div>
+
+        {{-- Edit Unidentified Patient Modal (single instance, listens to window event) --}}
+        @include('livewire.person.parts.modals.edit-unidentified-patient')
 
         <div class="mt-8">
             {{ $paginatedPatients->links() }}

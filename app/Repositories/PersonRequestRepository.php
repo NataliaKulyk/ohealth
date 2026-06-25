@@ -33,9 +33,15 @@ class PersonRequestRepository
         DB::transaction(static function () use ($personFields, $personData) {
             $personRequest = PersonRequest::create($personFields);
 
-            $personRequest->documents()->createMany($personData['documents']);
-            $personRequest->addresses()->createMany($personData['addresses']);
-            $personRequest->authenticationMethods()->createMany($personData['authentication_methods']);
+            if (!empty($personData['documents'])) {
+                $personRequest->documents()->createMany($personData['documents']);
+            }
+            if (!empty($personData['addresses'])) {
+                $personRequest->addresses()->createMany($personData['addresses']);
+            }
+            if (!empty($personData['authentication_methods'])) {
+                $personRequest->authenticationMethods()->createMany($personData['authentication_methods']);
+            }
 
             if (!empty($personData['phones'])) {
                 $personRequest->phones()->createMany($personData['phones']);
@@ -81,13 +87,19 @@ class PersonRequestRepository
             $personRequest->update($personFields);
 
             $personRequest->documents()->delete();
-            $personRequest->documents()->createMany($personData['documents']);
+            if (!empty($personData['documents'])) {
+                $personRequest->documents()->createMany($personData['documents']);
+            }
 
             $personRequest->addresses()->delete();
-            $personRequest->addresses()->createMany($personData['addresses']);
+            if (!empty($personData['addresses'])) {
+                $personRequest->addresses()->createMany($personData['addresses']);
+            }
 
             $personRequest->authenticationMethods()->delete();
-            $personRequest->authenticationMethods()->createMany($personData['authentication_methods']);
+            if (!empty($personData['authentication_methods'])) {
+                $personRequest->authenticationMethods()->createMany($personData['authentication_methods']);
+            }
 
             $personRequest->phones()->delete();
             if (!empty($personData['phones'])) {
@@ -143,8 +155,12 @@ class PersonRequestRepository
         DB::transaction(static function () use ($personFields, $personData) {
             $personRequest = PersonRequest::create($personFields);
 
-            $personRequest->documents()->createMany($personData['documents']);
-            $personRequest->addresses()->createMany($personData['addresses']);
+            if (!empty($personData['documents'])) {
+                $personRequest->documents()->createMany($personData['documents']);
+            }
+            if (!empty($personData['addresses'])) {
+                $personRequest->addresses()->createMany($personData['addresses']);
+            }
 
             if (!empty($personData['phones'])) {
                 $personRequest->phones()->createMany($personData['phones']);
