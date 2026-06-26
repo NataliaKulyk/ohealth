@@ -1,4 +1,4 @@
-<fieldset class="fieldset">
+<fieldset class="fieldset" x-data="{ unidentifiedReason: $wire.entangle('form.person.unidentifiedReason') }">
     <legend class="legend">
         {{ __('patients.patient_type') }}
     </legend>
@@ -41,39 +41,40 @@
 
         <div class="form-row-2">
             <div class="form-group">
-                <select wire:model.live="form.person.unidentifiedReason"
+                <select wire:model="form.person.unidentifiedReason"
+                    x-model="unidentifiedReason"
                     name="unidentifiedReason"
                     id="unidentifiedReason"
                     class="input-select peer @error('form.person.unidentifiedReason') input-error @enderror"
                     required
-            >
-                <option value="EMERGENCY_HOSPITALIZATION">
-                    {{ __('patients.unidentified_reasons.EMERGENCY_HOSPITALIZATION') }}
-                </option>
-                <option value="POLICE_HOSPITALIZATION">
-                    {{ __('patients.unidentified_reasons.POLICE_HOSPITALIZATION') }}
-                </option>
-                <option value="NEWBORN_WITHOUT_CERTIFICATE">
-                    {{ __('patients.unidentified_reasons.NEWBORN_WITHOUT_CERTIFICATE') }}
-                </option>
-                <option value="OTHER_HOSPITALIZATION">
-                    {{ __('patients.unidentified_reasons.OTHER_HOSPITALIZATION') }}
-                </option>
-            </select>
-            <label for="unidentifiedReason" class="label">
-                {{ __('patients.unidentified_reason') }}
-            </label>
+                >
+                    <option value="EMERGENCY_HOSPITALIZATION">
+                        {{ __('patients.unidentified_reasons.EMERGENCY_HOSPITALIZATION') }}
+                    </option>
+                    <option value="POLICE_HOSPITALIZATION">
+                        {{ __('patients.unidentified_reasons.POLICE_HOSPITALIZATION') }}
+                    </option>
+                    <option value="NEWBORN_WITHOUT_CERTIFICATE">
+                        {{ __('patients.unidentified_reasons.NEWBORN_WITHOUT_CERTIFICATE') }}
+                    </option>
+                    <option value="OTHER_HOSPITALIZATION">
+                        {{ __('patients.unidentified_reasons.OTHER_HOSPITALIZATION') }}
+                    </option>
+                </select>
+                <label for="unidentifiedReason" class="label">
+                    {{ __('patients.unidentified_reason') }}
+                </label>
 
-            @error('form.person.unidentifiedReason')
-            <p class="text-error">
-                {{ $message }}
-            </p>
-            @enderror
+                @error('form.person.unidentifiedReason')
+                <p class="text-error">
+                    {{ $message }}
+                </p>
+                @enderror
+            </div>
         </div>
-    </div>
 
-    @if(($form->person['unidentifiedReason'] ?? 'EMERGENCY_HOSPITALIZATION') === 'EMERGENCY_HOSPITALIZATION')
-        <div class="form-row-2" wire:key="reason-emergency">
+        <!-- EMERGENCY_HOSPITALIZATION -->
+        <div class="form-row-2" x-show="unidentifiedReason === 'EMERGENCY_HOSPITALIZATION'" wire:key="reason-emergency" x-cloak>
             <div class="form-group group">
                 <div class="relative w-full">
                     <input wire:model="form.person.ambulanceCardNumber"
@@ -103,8 +104,9 @@
                 @enderror
             </div>
         </div>
-    @elseif(($form->person['unidentifiedReason'] ?? '') === 'POLICE_HOSPITALIZATION')
-        <div class="form-row-2" wire:key="reason-police">
+
+        <!-- POLICE_HOSPITALIZATION -->
+        <div class="form-row-2" x-show="unidentifiedReason === 'POLICE_HOSPITALIZATION'" wire:key="reason-police" x-cloak>
             <div class="form-group group">
                 <div class="relative w-full">
                     <input wire:model="form.person.policeReportId"
@@ -114,7 +116,7 @@
                            class="input peer @error('form.person.policeReportId') input-error @enderror"
                            placeholder=" "
                            autocomplete="off"
-                           required
+                           :required="unidentifiedReason === 'POLICE_HOSPITALIZATION'"
                     />
                     <label for="policeReportId" class="label">
                         {{ __('patients.police_report_id') }}
@@ -145,7 +147,7 @@
                            class="datepicker-input with-leading-icon input peer @error('form.person.policeReportDate') input-error @enderror"
                            placeholder=" "
                            autocomplete="off"
-                           required
+                           :required="unidentifiedReason === 'POLICE_HOSPITALIZATION'"
                     />
                     <label for="policeReportDate" class="wrapped-label">
                         {{ __('patients.police_report_date') }}
@@ -159,8 +161,9 @@
                 @enderror
             </div>
         </div>
-    @elseif(($form->person['unidentifiedReason'] ?? '') === 'NEWBORN_WITHOUT_CERTIFICATE')
-        <div class="form-row-2" wire:key="reason-newborn">
+
+        <!-- NEWBORN_WITHOUT_CERTIFICATE -->
+        <div class="form-row-2" x-show="unidentifiedReason === 'NEWBORN_WITHOUT_CERTIFICATE'" wire:key="reason-newborn" x-cloak>
             <div class="form-group group">
                 <div class="relative">
                     @icon('clock', 'absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 dark:text-gray-400 pointer-events-none')
@@ -171,43 +174,43 @@
                            class="with-leading-icon input peer @error('form.person.childBirthTime') input-error @enderror"
                            placeholder=" "
                            autocomplete="off"
-                           required
-                    />
-                    <label for="childBirthTime" class="wrapped-label">
-                        {{ __('patients.child_birth_time') }}
-                    </label>
+                           :required="unidentifiedReason === 'NEWBORN_WITHOUT_CERTIFICATE'"
+                        />
+                        <label for="childBirthTime" class="wrapped-label">
+                            {{ __('patients.child_birth_time') }}
+                        </label>
+                    </div>
+
+                    @error('form.person.childBirthTime')
+                    <p class="text-error">
+                        {{ $message }}
+                    </p>
+                    @enderror
                 </div>
-
-                @error('form.person.childBirthTime')
-                <p class="text-error">
-                    {{ $message }}
-                </p>
-                @enderror
             </div>
-        </div>
-    @elseif(($form->person['unidentifiedReason'] ?? '') === 'OTHER_HOSPITALIZATION')
-        <div class="form-row-2" wire:key="reason-other">
-            <div class="form-group group">
-                <label for="unidentifiedOtherReason" class="label-secondary">
-                    {{ __('patients.unidentified_other_reason') }} *
-                </label>
-                <textarea wire:model="form.person.unidentifiedOtherReason"
-                          id="unidentifiedOtherReason"
-                          name="unidentifiedOtherReason"
-                          rows="4"
-                          class="textarea @error('form.person.unidentifiedOtherReason') input-error @enderror"
-                          placeholder="Текст для введення"
-                          autocomplete="off"
-                          required
-                ></textarea>
 
-                @error('form.person.unidentifiedOtherReason')
-                <p class="text-error">
-                    {{ $message }}
-                </p>
-                @enderror
+            <!-- OTHER_HOSPITALIZATION -->
+            <div class="form-row-2" x-show="unidentifiedReason === 'OTHER_HOSPITALIZATION'" wire:key="reason-other" x-cloak>
+                <div class="form-group group">
+                    <label for="unidentifiedOtherReason" class="label-secondary">
+                        {{ __('patients.unidentified_other_reason') }} *
+                    </label>
+                    <textarea wire:model="form.person.unidentifiedOtherReason"
+                              id="unidentifiedOtherReason"
+                              name="unidentifiedOtherReason"
+                              rows="4"
+                              class="textarea @error('form.person.unidentifiedOtherReason') input-error @enderror"
+                              placeholder="Текст для введення"
+                              autocomplete="off"
+                              :required="unidentifiedReason === 'OTHER_HOSPITALIZATION'"
+                    ></textarea>
+
+                    @error('form.person.unidentifiedOtherReason')
+                    <p class="text-error">
+                        {{ $message }}
+                    </p>
+                    @enderror
+                </div>
             </div>
-        </div>
-    @endif
-    @endif
+        @endif
 </fieldset>
