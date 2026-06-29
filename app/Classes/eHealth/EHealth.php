@@ -41,6 +41,7 @@ use App\Classes\eHealth\Api\Patient\Observation;
 use App\Classes\eHealth\Api\Patient\Procedure;
 use App\Classes\eHealth\Api\Person;
 use App\Classes\eHealth\Api\PersonRequest;
+use App\Classes\eHealth\Api\Preperson;
 use App\Classes\eHealth\Api\RuleEngineRules;
 use App\Classes\eHealth\Api\Service;
 use App\Classes\eHealth\Api\Verification;
@@ -70,6 +71,11 @@ final class EHealth
     public static function deviceDefinition(): DeviceDefinition
     {
         return app(DeviceDefinition::class);
+    }
+
+    public static function preperson(): Preperson
+    {
+        return app(Preperson::class);
     }
 
     public static function personRequest(): PersonRequest

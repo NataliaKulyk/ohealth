@@ -449,6 +449,10 @@ return [
     'legal_entity_outpatient_providing_conditions' => ['INPATIENT', 'OUTPATIENT', 'FIELD'],
     'legal_entity_emergency_providing_conditions' => ['FIELD'],
 
+    // TBD: values are not published yet.
+    // https://e-health-ua.atlassian.net/wiki/spaces/ESOZ/pages/20233683284/DRAFT+Config+params+Preperson+ENT-057#PREPERSON_HEALTHCARE_SERVICES_SPECIALITY_TYPES
+    'preperson_healthcare_services_speciality_types' => [],
+
     // https://e-health-ua.atlassian.net/wiki/spaces/ESOZ/pages/17570234464/DRAFT+REST+API+Create+Declaration+Request+V3+API-005-014-0001#Validate-Legal-Entity-Type
     'declaration_request_legal_entity_types' => ['MSP', 'PRIMARY_CARE', 'MSP_PHARMACY', 'MSP_LIMITED'],
 
