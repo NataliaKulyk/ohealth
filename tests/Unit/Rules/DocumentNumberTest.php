@@ -37,7 +37,9 @@ class DocumentNumberTest extends TestCase
     public static function invalidDocumentNumbersProvider(): array
     {
         return [
+            'passport latin letters' => ['PASSPORT', 'AA123456', 'Паспорт'],
             'passport with spaces' => ['PASSPORT', 'AA 123456', 'Паспорт'],
+            'passport nine digits is national id format' => ['PASSPORT', '123456789', 'Паспорт'],
             'national id too short' => ['NATIONAL_ID', '12345', '9 цифр'],
             'refugee wrong format' => ['REFUGEE_CERTIFICATE', '1234567890', 'Посвідчення біженця'],
         ];
@@ -46,10 +48,10 @@ class DocumentNumberTest extends TestCase
     public static function validDocumentNumbersProvider(): array
     {
         return [
-            'passport series' => ['PASSPORT', 'АА123456'],
-            'passport id card' => ['PASSPORT', '123456789'],
+            'passport cyrillic series' => ['PASSPORT', 'АА123456'],
             'national id' => ['NATIONAL_ID', '123456789'],
             'refugee certificate' => ['REFUGEE_CERTIFICATE', 'АА123456'],
+            'permanent residence permit' => ['PERMANENT_RESIDENCE_PERMIT', 'АА123456'],
         ];
     }
 }

@@ -82,7 +82,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
             $this->employeeRequest = $this->handleDraftPersistence();
             $this->employeeRequestId = $this->employeeRequest->id;
 
-            $this->dispatch('flashMessage', ['message' => __('forms.employee_request_saved_successfully'), 'type' => 'success']);
+            $this->flashSuccess(__('forms.employee_request_saved_successfully'));
         } catch (ValidationException $e) {
             $this->handleValidationException($e);
         } catch (Exception $e) {
@@ -99,11 +99,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
             $this->employeeRequest = $this->handleDraftPersistence();
             $this->employeeRequestId = $this->employeeRequest->id;
 
-            // Now dispatch the events
-            $this->dispatch(
-                'flashMessage',
-                ['message' => __('forms.employee_request_saved_successfully'), 'type' => 'success']
-            );
+            $this->flashSuccess(__('forms.employee_request_saved_successfully'));
             $this->dispatch('open-signature-modal');
         } catch (ValidationException $e) {
             $this->handleValidationException($e);
@@ -158,7 +154,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
                 'line' => $e->getLine(),
             ]);
 
-            $this->dispatch('flashMessage', ['message' => __('errors.unexpected_error'), 'type' => 'error', 'persistent' => true]);
+            $this->flashError(__('errors.unexpected_error'));
             $this->dispatch('close-signature-modal');
         }
     }
@@ -339,11 +335,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
             default => $errorMessage
         };
 
-        $this->dispatch('flashMessage', [
-            'message' => $translatedMessage,
-            'type' => 'error',
-            'persistent' => true
-        ]);
+        $this->flashError($translatedMessage);
 
         Log::error('EHealth Error Handled: ' . $errorMessage);
     }
@@ -548,11 +540,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
             $this->form->party['noTaxId'] = !$this->form->party['noTaxId'];
             $this->syncTaxIdFromDocument();
         } else {
-            $this->dispatch('flashMessage', [
-                'message' => __('forms.no_tax_id_document_required'),
-                'type' => 'error',
-                'persistent' => true
-            ]);
+            $this->flashError(__('forms.no_tax_id_document_required'));
             $this->dispatch('scroll-to-element', selector: '#section-documents');
             $this->dispatch('highlight-section', selector: '#section-documents');
         }
@@ -586,8 +574,8 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
         $allMessages = $validator->errors()->all();
 
         if (in_array($specificEmailError, $allMessages, true)) {
-            $this->dispatch('flashMessage', ['message' => $specificEmailError, 'type' => 'error', 'persistent' => true]);
-
+            $this->flashError($specificEmailError);
+            $this->setErrorBag($validator->getMessageBag());
             $this->dispatch('validation-failed-scroll', firstErrorKey: 'form.party.email');
 
             return;
@@ -595,7 +583,8 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
 
         $flashMessage = $this->buildValidationFlashMessage($validator);
 
-        $this->dispatch('flashMessage', ['message' => $flashMessage, 'type' => 'error', 'persistent' => true]);
+        $this->flashError($flashMessage);
+        $this->setErrorBag($validator->getMessageBag());
 
         if (!empty($validator->errors()->keys())) {
             $this->dispatch('validation-failed-scroll', firstErrorKey: $validator->errors()->keys()[0]);
@@ -674,9 +663,19 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
         return null;
     }
 
+    protected function flashSuccess(string $message): void
+    {
+        session()->flash('success', $message);
+    }
+
+    protected function flashError(string $message): void
+    {
+        session()->flash('error', $message);
+    }
+
     private function handleConnectionException(EHealthConnectionException $e): void
     {
-        $this->dispatch('flashMessage', ['message' => __('errors.ehealth_connection_error'), 'type' => 'error', 'persistent' => true]);
+        $this->flashError(__('errors.ehealth_connection_error'));
         Log::error('EHealth connection error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
     }
 
@@ -686,7 +685,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
     protected function handleException(Exception $e): void
     {
         Log::error('Process failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-        $this->dispatch('flashMessage', ['message' => $e->getMessage(), 'type' => 'error', 'persistent' => true]);
+        $this->flashError($e->getMessage());
     }
 
     /**
@@ -695,7 +694,7 @@ abstract class AbstractEmployeeFormManager extends EmployeeComponent
     protected function handleEHealthValidationError(EHealthValidationException $e): void
     {
         $fullMessage = $e->getTranslatedMessage();
-        $this->dispatch('flashMessage', ['message' => $fullMessage, 'type' => 'error', 'persistent' => true]);
+        $this->flashError($fullMessage);
 
         Log::error(
             'EHealth Validation Error: ' . $fullMessage,

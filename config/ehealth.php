@@ -431,8 +431,10 @@ return [
         'PASSPORT', 'PERMANENT_RESIDENCE_PERMIT', 'REFUGEE_CERTIFICATE', 'TEMPORARY_CERTIFICATE', 'TEMPORARY_PASSPORT'
     ],
     'employee_identity_document_types' => [
-        'COMPLEMENTARY_PROTECTION_CERTIFICATE','NATIONAL_ID','PASSPORT','PERMANENT_RESIDENCE_PERMIT','REFUGEE_CERTIFICATE',
-        'TEMPORARY_CERTIFICATE','TEMPORARY_PASSPORT'
+        // EMPLOYEE_IDENTITY_DOCUMENT_TYPES — Create employee request v2 (API-005-024-0001)
+        // https://e-health-ua.atlassian.net/wiki/spaces/EH/pages/583402887/Create+employee+request+v2
+        'COMPLEMENTARY_PROTECTION_CERTIFICATE', 'NATIONAL_ID', 'PASSPORT', 'PERMANENT_RESIDENCE_PERMIT', 'REFUGEE_CERTIFICATE',
+        'TEMPORARY_CERTIFICATE', 'TEMPORARY_PASSPORT',
     ],
 
     // https://e-health-ua.atlassian.net/wiki/spaces/EH/pages/17088643146/Configurations+for+Healthcare+services

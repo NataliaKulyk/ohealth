@@ -185,7 +185,7 @@ class EmployeeForm extends Form
 
     protected function documentsRules(): array
     {
-        $identityDocTypes = config('ehealth.employee_identity_document_types', []);
+        $allowedDocumentTypes = config('ehealth.employee_identity_document_types', []);
 
         return [
             'documents' => [
@@ -193,10 +193,10 @@ class EmployeeForm extends Form
                 'array',
                 'min:1',
                 new UniquePassportRule(),
-                new HasIdentityDocumentRule($identityDocTypes),
+                new HasIdentityDocumentRule($allowedDocumentTypes),
             ],
 
-            'documents.*.type' => ['required', 'string', Rule::in(array_keys($this->component->dictionaries['DOCUMENT_TYPE'] ?? []))],
+            'documents.*.type' => ['required', 'string', Rule::in($allowedDocumentTypes)],
             'documents.*.number' => [
                 'required',
                 'string',
