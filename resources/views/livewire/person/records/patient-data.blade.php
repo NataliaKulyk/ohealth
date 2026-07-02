@@ -282,8 +282,8 @@
                         </button>
                     </h2>
                     <div x-show="open" wire:ignore.self>
-                        <div class="px-6 pb-6 border-t border-gray-100 dark:border-gray-700 pt-4">
-                            <div class="flex items-center justify-end mb-4">
+                        <div class="px-6 pb-6 border-t border-gray-100 dark:border-gray-700 pt-6">
+                            <div class="flex items-center justify-end mb-6">
                                 <button type="button" class="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-medium text-sm cursor-pointer" style="margin: 0 !important;">
                                     @icon('refresh', 'w-4 h-4')
                                     <span>{{ __('patients.sync_personal_data') }}</span>
@@ -440,8 +440,8 @@
                         </button>
                     </h2>
                     <div x-show="open" wire:ignore.self>
-                        <div class="px-6 pb-6 border-t border-gray-100 dark:border-gray-700 pt-4">
-                            <div class="flex items-center justify-end mb-4">
+                        <div class="px-6 pb-6 border-t border-gray-100 dark:border-gray-700 pt-6">
+                            <div class="flex items-center justify-end mb-6">
                                 <button type="button" class="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-medium text-sm cursor-pointer" style="margin: 0 !important;">
                                     @icon('refresh', 'w-4 h-4')
                                     <span>{{ __('patients.sync_personal_data') }}</span>
@@ -502,8 +502,8 @@
                         </button>
                     </h2>
                     <div x-show="open" wire:ignore.self>
-                        <div class="px-6 pb-6 border-t border-gray-100 dark:border-gray-700 pt-4">
-                            <div class="flex items-center justify-end mb-4">
+                        <div class="px-6 pb-6 border-t border-gray-100 dark:border-gray-700 pt-6">
+                            <div class="flex items-center justify-end mb-6">
                                 <button type="button" class="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-medium text-sm cursor-pointer" style="margin: 0 !important;">
                                     @icon('refresh', 'w-4 h-4')
                                     <span>{{ __('patients.sync_personal_data') }}</span>
@@ -555,8 +555,16 @@
                             class="flex items-center justify-between w-full px-6 py-4 text-left group cursor-pointer"
                             @click="open = !open"
                             :aria-expanded="open"
-                                        <div class="mt-6">
-                                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                        >
+                            <span class="text-base font-semibold text-gray-900 dark:text-white">
+                                {{ __('patients.patient_legal_representative') }}
+                            </span>
+                            @icon('chevron-down', 'w-5 h-5 text-gray-400 transition-transform group-aria-expanded:rotate-180 shrink-0')
+                        </button>
+                    </h2>
+                    <div x-show="open" wire:ignore.self>
+                        <div class="px-6 pb-6 border-t border-gray-100 dark:border-gray-700 pt-6">
+                            <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
                                     <h3 class="text-base font-semibold text-gray-900 dark:text-white">
                                         {{ __('patients.confidant_persons') }}
                                     </h3>
@@ -702,7 +710,7 @@
                             </div>
 
 
-                            <div class="mt-8 border-t border-gray-100 dark:border-gray-700 pt-6">
+                            <div class="mt-8 border-t border-gray-100 dark:border-gray-700 pt-6 px-6 pb-6">
                                 <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
                                     <h3 class="text-base font-semibold text-gray-900 dark:text-white">
                                         {{ __('patients.confidant_relationship_requests') }}
@@ -727,19 +735,28 @@
                                         @if(!empty($confidantPersonRelationshipRequests))
                                             @foreach($confidantPersonRelationshipRequests as $index => $req)
                                                 <tr>
-                                                    <td class="td-input text-sm text-gray-600 dark:text-gray-400 font-medium">{{ $req['uuid'] }}</td>
-                                                    <td class="td-input">
-                                                        <span @class([$req['status']?->color()])>
+                                                    <td class="td-input align-top text-sm text-gray-900 dark:text-white font-medium break-all">{{ $req['uuid'] }}</td>
+                                                    <td class="td-input align-top">
+                                                        @php
+                                                            $statusClass = match ($req['status']) {
+                                                                \App\Enums\Person\ConfidantPersonRelationshipRequestStatus::APPROVED,
+                                                                \App\Enums\Person\ConfidantPersonRelationshipRequestStatus::COMPLETED => 'text-green-800 bg-green-100 dark:bg-green-900 dark:text-green-200',
+                                                                \App\Enums\Person\ConfidantPersonRelationshipRequestStatus::NEW => 'text-yellow-800 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-200',
+                                                                \App\Enums\Person\ConfidantPersonRelationshipRequestStatus::CANCELLED => 'text-red-800 bg-red-100 dark:bg-red-900 dark:text-red-200',
+                                                                default => 'text-gray-800 bg-gray-100 dark:bg-gray-700 dark:text-gray-200',
+                                                            };
+                                                        @endphp
+                                                        <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $statusClass }}">
                                                             {{ $req['status']?->label() ?? '-' }}
                                                         </span>
                                                     </td>
-                                                    <td class="td-input text-gray-700 dark:text-gray-300 font-medium">
+                                                    <td class="td-input align-top text-gray-900 dark:text-white font-medium">
                                                         {{ $req['action'] === 'INSERT' ? __('patients.activate_relationship') : __('patients.deactivate_relationship') }}
                                                     </td>
-                                                    <td class="td-input text-gray-700 dark:text-gray-300 font-medium">
+                                                    <td class="td-input align-top text-gray-900 dark:text-white font-medium">
                                                         {{ $req['channel'] === 'MIS' ? __('patients.mis_system') : $req['channel'] }}
                                                     </td>
-                                                    <td class="td-input text-center">
+                                                    <td class="td-input text-center align-top">
                                                         <div class="relative" x-data="{ openRequestDropdown: false }" @click.outside="openRequestDropdown = false">
                                                             <button @click="openRequestDropdown = !openRequestDropdown" type="button" class="cursor-pointer p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                                                                 @icon('edit-user-outline', 'w-6 h-6 text-gray-800 dark:text-gray-200')
@@ -777,7 +794,7 @@
 
 
                 <div x-data="{ open: true }"
-                    class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
+                    class="mt-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
                     <h2>
                         <button
                             type="button"
@@ -792,8 +809,8 @@
                         </button>
                     </h2>
                     <div x-show="open" wire:ignore.self>
-                        <div class="px-6 pb-6 border-t border-gray-100 dark:border-gray-700 pt-4">
-                            <div class="flex items-center justify-end mb-4">
+                        <div class="px-6 pb-6 border-t border-gray-100 dark:border-gray-700 pt-6">
+                            <div class="flex items-center justify-end mb-6">
                                 <button type="button" class="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-medium text-sm cursor-pointer" wire:click.prevent="syncAuthMethods" style="margin: 0 !important;">
                                     @icon('refresh', 'w-4 h-4')
                                     <span>{{ __('patients.sync_auth_methods') }}</span>
