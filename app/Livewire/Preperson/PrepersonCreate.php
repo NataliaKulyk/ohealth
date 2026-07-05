@@ -6,6 +6,7 @@ namespace App\Livewire\Preperson;
 
 use App\Classes\eHealth\EHealth;
 use App\Core\Arr;
+use App\Enums\Preperson\Status;
 use App\Exceptions\EHealth\EHealthConnectionException;
 use App\Exceptions\EHealth\EHealthException;
 use App\Livewire\Preperson\Forms\PrepersonForm as Form;
@@ -75,6 +76,7 @@ class PrepersonCreate extends Component
         // note is the eHealth-facing text; reasonContext keeps the raw fields so the draft can be re-edited later
         $personData['note'] = $this->form->buildNote();
         $personData['reasonContext'] = $validated['reasonContext'];
+        $personData['status'] = Status::DRAFT->value;
 
         if (!empty($personData['birthDate'])) {
             $personData['birthDate'] = convertToYmd($personData['birthDate']);
@@ -94,7 +96,7 @@ class PrepersonCreate extends Component
         }
 
         Session::flash('success', __('patients.messages.preperson_draft_created'));
-        $this->redirectRoute('persons.index', [legalEntity()], navigate: true);
+        $this->redirectRoute('prepersons.index', [legalEntity()], navigate: true);
     }
 
     /**
