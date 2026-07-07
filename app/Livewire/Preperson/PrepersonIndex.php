@@ -8,6 +8,8 @@ use App\Models\Preperson;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -21,6 +23,51 @@ class PrepersonIndex extends Component
     public ?string $searchName = null;
 
     public ?string $searchBirthDate = null;
+
+    public ?int $certificatePrepersonId = null;
+
+    /**
+     * The preperson whose information certificate is currently open, if any.
+     *
+     * @return Preperson|null
+     */
+    #[Computed]
+    public function certificatePreperson(): ?Preperson
+    {
+        return $this->certificatePrepersonId !== null
+            ? Preperson::find($this->certificatePrepersonId)
+            : null;
+    }
+
+    /**
+     * Select the preperson whose information certificate should be displayed.
+     *
+     * @param  int  $prepersonId
+     * @return void
+     */
+    public function selectCertificate(int $prepersonId): void
+    {
+        $this->certificatePrepersonId = $prepersonId;
+    }
+
+    /**
+     * Delete a locally stored preperson draft.
+     *
+     * @param  Preperson  $preperson
+     * @return void
+     */
+    public function deleteDraft(Preperson $preperson): void
+    {
+        if (Auth::user()->cannot('delete', $preperson)) {
+            Session::flash('error', __('preperson.policy.delete'));
+
+            return;
+        }
+
+        $preperson->delete();
+
+        Session::flash('success', __('preperson.messages.draft_deleted'));
+    }
 
     /**
      * Prepersons matching the applied search filters, paginated.

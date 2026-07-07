@@ -6,14 +6,16 @@
     <div>
         @include('livewire.preperson.parts.preperson-reason')
         @include('livewire.preperson.parts.preperson-personal-data')
-        @include('livewire.preperson.parts.emergency-contact')
+        @include('livewire.preperson.parts.emergency-contact', [
+            'showContactPersonOpen' => $this->form->hasEmergencyContactData()
+        ])
     </div>
 
     @can('create', Preperson::class)
         <div class="flex flex-wrap gap-4 items-center">
             <button
                 type="submit"
-                wire:click.prevent="createLocally"
+                wire:click.prevent="updateLocally"
                 class="button-primary-outline flex items-center gap-2"
             >
                 @icon('archive', 'w-4 h-4')
