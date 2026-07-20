@@ -21,7 +21,6 @@ return [
     'edit_data' => 'Редагувати дані',
     'birth_country_and_settlement' => 'Країна та місто народження',
     'has_last_name' => 'Пацієнт має прізвище',
-    'name' => 'Ім’я',
     'start_interacting' => 'Розпочати взаємодію',
     'starts_interacting' => 'Нова взаємодія',
     'nobody_found' => 'Нікого не знайдено',

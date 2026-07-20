@@ -112,12 +112,7 @@
                                     </button>
                                 @endcan
 
-                                @if(
-                                    auth()->user()->can('create', DeclarationRequest::class) ||
-                                    auth()->user()->can('create', DiagnosticReport::class) ||
-                                    auth()->user()->can('create', Procedure::class) ||
-                                    auth()->user()->can('view', Episode::class)
-                                )
+                                @canany(['create', 'view'], [DeclarationRequest::class, DiagnosticReport::class, Procedure::class, Episode::class])
                                     <div class="relative">
                                         <button @click="openInteractionDropdown = !openInteractionDropdown"
                                                 class="cursor-pointer text-blue-600 hover:text-blue-800 flex items-center gap-1.5 font-medium text-sm"
@@ -173,7 +168,7 @@
                                             @endcan
                                         </div>
                                     </div>
-                                @endif
+                                @endcanany
                             @endif
                         </div>
                     </div>
