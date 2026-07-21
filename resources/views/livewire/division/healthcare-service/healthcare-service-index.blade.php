@@ -229,15 +229,15 @@
                             @foreach ($healthcareServices as $service)
                                 <tr wire:key="healthcare-service-{{ $service->id }}" class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
                                     <td class="px-6 py-4 text-xs font-semibold text-gray-800 dark:text-gray-200">
-                                        {{ $service->division->name ?? '-' }}
+                                        {{ $service->division?->name ?? '-' }}
                                     </td>
 
                                     <td class="px-6 py-4 text-xs text-gray-700 dark:text-gray-300">
-                                        {{ $service->category->coding->first()->display ?? $dictionaries['SPECIALITY_TYPE'][$service->specialityType] ?? '-' }}
+                                        {{ $service->category?->coding?->first()?->display ?? $dictionaries['SPECIALITY_TYPE'][$service->specialityType] ?? '-' }}
                                     </td>
 
                                     <td class="px-6 py-4 text-xs text-gray-700 dark:text-gray-300">
-                                        {{ $service->type->coding->first()->display ?? $dictionaries['PROVIDING_CONDITION'][$service->providingCondition] ?? '-' }}
+                                        {{ $service->type?->coding?->first()?->display ?? $dictionaries['PROVIDING_CONDITION'][$service->providingCondition] ?? '-' }}
                                     </td>
 
                                     <td class="px-6 py-4 text-xs text-gray-600 dark:text-gray-400">
@@ -292,9 +292,9 @@
                                                         class="absolute right-0 mt-2 w-auto min-w-40 max-w-[20rem] rounded-md bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-md z-50"
                                                     >
                                                         @if ($service->status === Status::ACTIVE)
-                                                            @can('view', $service)
+                                                             @can('view', $service)
                                                                 <a
-                                                                    href="{{ route('healthcare-service.view', [legalEntity(), $service->division, $service->id]) }}"
+                                                                    href="{{ route('healthcare-service.view', [legalEntity(), $service->division_id, $service->id]) }}"
                                                                     class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
                                                                 >
                                                                     @icon('eye', 'w-5 h-5 text-gray-600 dark:text-gray-300')
@@ -304,7 +304,7 @@
 
                                                             @can('update', $service)
                                                                 <a
-                                                                    href="{{ route('healthcare-service.update', [legalEntity(), $service->division, $service->id]) }}"
+                                                                    href="{{ route('healthcare-service.update', [legalEntity(), $service->division_id, $service->id]) }}"
                                                                     class="flex items-center gap-2 w-full px-4 py-2.5 text-left text-sm text-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
                                                                 >
                                                                     @icon('edit', 'w-5 h-5 text-gray-600 dark:text-gray-300')
