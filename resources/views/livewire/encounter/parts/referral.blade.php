@@ -1,4 +1,7 @@
 <div id="referral-section">
+    @if ($incomingReferral !== null)
+        @include('livewire.encounter.parts.incoming-referral-card')
+    @else
     <div
         x-data="{
             isReferralAvailable: false,
@@ -317,4 +320,5 @@
             </template>
         </div>
     </div>
+    @endif
 </div>

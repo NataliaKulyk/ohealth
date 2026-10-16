@@ -8,10 +8,10 @@
             zIndex="46"
             onCloseClick="$wire.closeEncounterReferralDrawer()"
         >
-            <x-slot name="title">Виписати електронне направлення (без плану лікування)</x-slot>
+            <x-slot name="title">{{ __('encounters.referral_drawer.title') }}</x-slot>
         <form wire:submit.prevent="validateEncounterReferral" class="space-y-6">
             <fieldset class="fieldset">
-                <legend class="legend">Послуга</legend>
+                <legend class="legend">{{ __('encounters.service') }}</legend>
                 <div class="mb-4 grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div class="form-group group md:col-span-2">
                         <label for="encounterReferralServiceSearch" class="label required">
@@ -22,7 +22,7 @@
                                 type="text"
                                 id="encounterReferralServiceSearch"
                                 class="input peer w-full"
-                                placeholder="Код або назва послуги"
+                                placeholder="{{ __('encounters.referral_drawer.service_search_placeholder') }}"
                                 wire:model="encounterReferralServiceSearch"
                                 wire:keydown.enter.prevent="searchEncounterReferralServices"
                             />
@@ -32,7 +32,7 @@
                                 class="button-primary shrink-0"
                                 wire:click="searchEncounterReferralServices"
                             >
-                                Пошук
+                                {{ __('forms.search') }}
                             </button>
 
                             <button
@@ -71,7 +71,7 @@
                                     class="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-left text-sm transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:border-blue-400 dark:hover:bg-gray-700"
                                 >
                                     <div class="font-medium text-gray-900 dark:text-gray-100">
-                                        {{ ($service['code'] ?? '') }} — {{ $service['name'] ?? 'Послуга' }}
+                                        {{ ($service['code'] ?? '') }} — {{ $service['name'] ?? __('encounters.service') }}
                                     </div>
                                     @php
                                         $serviceCategoryKey = 'encounters.referral_category.'.strtolower((string) ($service['category'] ?? ''));
@@ -86,11 +86,11 @@
                         </div>
                     @elseif ($encounterReferralHasSearched)
                         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center text-sm text-gray-500 md:col-span-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                            Послуг за вашим запитом не знайдено.
+                            {{ __('encounters.referral_drawer.services_not_found') }}
                         </div>
                     @endif
                     <div class="form-group group md:col-span-2">
-                        <label for="encounterReferralSelectedService" class="label">Обрана послуга</label>
+                        <label for="encounterReferralSelectedService" class="label">{{ __('encounters.referral_drawer.selected_service') }}</label>
                         <input
                             type="text"
                             id="encounterReferralSelectedService"
@@ -101,7 +101,7 @@
                         />
                     </div>
                     <div class="form-group group">
-                        <label for="encounterReferralCategory" class="label required">Категорія</label>
+                        <label for="encounterReferralCategory" class="label required">{{ __('forms.category') }}</label>
                         <select
                             id="encounterReferralCategory"
                             class="input-select peer w-full"
@@ -115,13 +115,13 @@
                         </select>
                     </div>
                     <div class="form-group group">
-                        <label for="encounterReferralProgram" class="label">Програма</label>
+                        <label for="encounterReferralProgram" class="label">{{ __('care-plan.program') }}</label>
                         <select
                             id="encounterReferralProgram"
                             class="input-select peer w-full"
                             wire:model="encounterReferralForm.program_id"
                         >
-                            <option value="">Не обрано</option>
+                            <option value="">{{ __('encounters.referral_drawer.not_selected') }}</option>
                             @foreach ($encounterReferralPrograms as $program)
                                 <option value="{{ $program['id'] }}">{{ $program['name'] }}</option>
                             @endforeach
@@ -131,10 +131,10 @@
             </fieldset>
 
             <fieldset class="fieldset">
-                <legend class="legend">Термін дії та кількість</legend>
+                <legend class="legend">{{ __('encounters.referral_drawer.validity_and_quantity') }}</legend>
                 <div class="mb-4 grid grid-cols-1 gap-6 md:grid-cols-3">
                     <div class="form-group group">
-                        <label for="encounterReferralStartedAt" class="label required">Дата початку</label>
+                        <label for="encounterReferralStartedAt" class="label required">{{ __('forms.start_date') }}</label>
                         <input
                             type="text"
                             id="encounterReferralStartedAt"
@@ -144,7 +144,7 @@
                         />
                     </div>
                     <div class="form-group group">
-                        <label for="encounterReferralEndedAt" class="label required">Дата закінчення</label>
+                        <label for="encounterReferralEndedAt" class="label required">{{ __('forms.end_date') }}</label>
                         <input
                             type="text"
                             id="encounterReferralEndedAt"
@@ -154,7 +154,7 @@
                         />
                     </div>
                     <div class="form-group group">
-                        <label for="encounterReferralQuantity" class="label required">Кількість</label>
+                        <label for="encounterReferralQuantity" class="label required">{{ __('care-plan.quantity') }}</label>
                         <input
                             type="number"
                             id="encounterReferralQuantity"
@@ -167,7 +167,7 @@
                 </div>
                 <div class="mb-4 grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div class="form-group group">
-                        <label for="encounterReferralPriority" class="label required">Пріоритет</label>
+                        <label for="encounterReferralPriority" class="label required">{{ __('encounters.priority') }}</label>
                         <select
                             id="encounterReferralPriority"
                             class="input-select peer w-full"
@@ -183,16 +183,16 @@
             </fieldset>
 
             <fieldset class="fieldset">
-                <legend class="legend">Додатково</legend>
+                <legend class="legend">{{ __('encounters.referral_drawer.additional') }}</legend>
                 <div class="mb-4 grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div class="form-group group">
-                        <label for="encounterReferralInformWith" class="label">Метод автентифікації</label>
+                        <label for="encounterReferralInformWith" class="label">{{ __('forms.auth_method') }}</label>
                         <select
                             id="encounterReferralInformWith"
                             class="input-select peer w-full"
                             wire:model="encounterReferralForm.inform_with"
                         >
-                            <option value="">Не обрано</option>
+                            <option value="">{{ __('encounters.referral_drawer.not_selected') }}</option>
                             @foreach ($encounterReferralAuthMethods as $method)
                                 <option value="{{ \App\Services\MedicalEvents\InformWith::formValue($method) }}">
                                     {{ $method['label'] ?? '' }}
@@ -201,7 +201,7 @@
                         </select>
                     </div>
                     <div class="form-group group">
-                        <label for="encounterReferralPatientInstruction" class="label">Інструкція пацієнту</label>
+                        <label for="encounterReferralPatientInstruction" class="label">{{ __('referrals.registry.patient_instruction') }}</label>
                         <input
                             type="text"
                             id="encounterReferralPatientInstruction"
@@ -211,7 +211,7 @@
                     </div>
                 </div>
                 <div class="form-group group">
-                    <label for="encounterReferralNote" class="label">Примітки</label>
+                    <label for="encounterReferralNote" class="label">{{ __('encounters.referral_drawer.notes') }}</label>
                     <textarea
                         id="encounterReferralNote"
                         class="input peer min-h-20"
@@ -226,9 +226,9 @@
                 </div>
             @endif
 
-            <div class="flex justify-end gap-3">
-                <button type="button" class="button-minor" wire:click="closeEncounterReferralDrawer">Скасувати</button>
-                <button type="submit" class="button-primary">Створити та підписати</button>
+            <div class="flex justify-start gap-3">
+                <button type="button" class="button-minor" wire:click="closeEncounterReferralDrawer">{{ __('forms.cancel') }}</button>
+                <button type="submit" class="button-primary">{{ __('forms.create_and_sign') }}</button>
             </div>
         </form>
         </x-dialog-drawer>
